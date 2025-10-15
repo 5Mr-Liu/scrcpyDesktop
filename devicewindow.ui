@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DeviceWindow</class>
+ <widget class="QMainWindow" name="DeviceWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>469</width>
+    <height>914</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>设备 - [Serial Number]</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_videoStream">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: black;</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="deviceControlToolbar">
+   <property name="windowTitle">
+    <string>设备控制</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>RightToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_power"/>
+   <addaction name="action_screenOn"/>
+   <addaction name="action_screenOff"/>
+   <addaction name="separator"/>
+   <addaction name="action_volumeUp"/>
+   <addaction name="action_volumeDown"/>
+   <addaction name="separator"/>
+   <addaction name="action_rotateDevice"/>
+   <addaction name="separator"/>
+   <addaction name="action_home"/>
+   <addaction name="action_back"/>
+   <addaction name="action_appSwitch"/>
+   <addaction name="action_menu"/>
+   <addaction name="separator"/>
+   <addaction name="action_expandNotifications"/>
+   <addaction name="action_collapseNotifications"/>
+   <addaction name="separator"/>
+   <addaction name="action_screenshot"/>
+  </widget>
+  <action name="action_home">
+   <property name="icon">
+    <iconset theme="go-home"/>
+   </property>
+   <property name="text">
+    <string>Home</string>
+   </property>
+   <property name="toolTip">
+    <string>主屏幕</string>
+   </property>
+  </action>
+  <action name="action_back">
+   <property name="icon">
+    <iconset theme="go-previous"/>
+   </property>
+   <property name="text">
+    <string>返回</string>
+   </property>
+  </action>
+  <action name="action_appSwitch">
+   <property name="icon">
+    <iconset theme="view-app-grid"/>
+   </property>
+   <property name="text">
+    <string>多任务</string>
+   </property>
+   <property name="toolTip">
+    <string>多任务/最近应用</string>
+   </property>
+  </action>
+  <action name="action_menu">
+   <property name="icon">
+    <iconset theme="application-menu"/>
+   </property>
+   <property name="text">
+    <string>菜单</string>
+   </property>
+  </action>
+  <action name="action_volumeUp">
+   <property name="icon">
+    <iconset theme="audio-volume-high"/>
+   </property>
+   <property name="text">
+    <string>音量+</string>
+   </property>
+  </action>
+  <action name="action_volumeDown">
+   <property name="icon">
+    <iconset theme="audio-volume-low"/>
+   </property>
+   <property name="text">
+    <string>音量-</string>
+   </property>
+  </action>
+  <action name="action_power">
+   <property name="icon">
+    <iconset theme="system-shutdown"/>
+   </property>
+   <property name="text">
+    <string>电源</string>
+   </property>
+   <property name="toolTip">
+    <string>电源键</string>
+   </property>
+  </action>
+  <action name="action_screenOn">
+   <property name="icon">
+    <iconset theme="display-brightness-full"/>
+   </property>
+   <property name="text">
+    <string>亮屏</string>
+   </property>
+  </action>
+  <action name="action_screenOff">
+   <property name="icon">
+    <iconset theme="display-brightness-off"/>
+   </property>
+   <property name="text">
+    <string>息屏(镜像)</string>
+   </property>
+  </action>
+  <action name="action_rotateDevice">
+   <property name="icon">
+    <iconset theme="object-rotate-right"/>
+   </property>
+   <property name="text">
+    <string>旋转</string>
+   </property>
+   <property name="toolTip">
+    <string>旋转设备屏幕</string>
+   </property>
+  </action>
+  <action name="action_expandNotifications">
+   <property name="icon">
+    <iconset theme="mail-mark-unread"/>
+   </property>
+   <property name="text">
+    <string>通知栏</string>
+   </property>
+   <property name="toolTip">
+    <string>展开通知栏</string>
+   </property>
+  </action>
+  <action name="action_collapseNotifications">
+   <property name="icon">
+    <iconset theme="mail-read"/>
+   </property>
+   <property name="text">
+    <string>收起通知</string>
+   </property>
+  </action>
+  <action name="action_screenshot">
+   <property name="icon">
+    <iconset theme="camera-photo"/>
+   </property>
+   <property name="text">
+    <string>截图</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
