@@ -370,15 +370,15 @@
         <item>
          <widget class="QToolBox" name="toolBox_settings">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="page_video">
            <property name="geometry">
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>402</width>
-             <height>497</height>
+             <width>607</width>
+             <height>389</height>
             </rect>
            </property>
            <attribute name="label">
@@ -619,8 +619,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>402</width>
-             <height>497</height>
+             <width>607</width>
+             <height>389</height>
             </rect>
            </property>
            <attribute name="label">
@@ -814,6 +814,9 @@
                  <property name="text">
                   <string>禁用音频转发 (--no-audio)</string>
                  </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item row="6" column="0" colspan="2">
@@ -832,6 +835,14 @@
            </layout>
           </widget>
           <widget class="QWidget" name="page_camera">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>607</width>
+             <height>389</height>
+            </rect>
+           </property>
            <attribute name="label">
             <string>摄像头设置 (Camera)</string>
            </attribute>
@@ -1003,6 +1014,14 @@
            </layout>
           </widget>
           <widget class="QWidget" name="page_behavior">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>607</width>
+             <height>389</height>
+            </rect>
+           </property>
            <attribute name="label">
             <string>控制与行为</string>
            </attribute>
@@ -1172,6 +1191,14 @@
            </layout>
           </widget>
           <widget class="QWidget" name="page_window">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>607</width>
+             <height>389</height>
+            </rect>
+           </property>
            <attribute name="label">
             <string>窗口与录制</string>
            </attribute>
@@ -1427,8 +1454,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1292</width>
-                 <height>853</height>
+                 <width>1093</width>
+                 <height>561</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_devices">

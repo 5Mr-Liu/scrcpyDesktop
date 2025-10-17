@@ -17,7 +17,7 @@ class VideoDecoderThread : public QThread
 {
     Q_OBJECT
 public:
-    explicit VideoDecoderThread(QObject *parent = nullptr);
+    explicit VideoDecoderThread(const QString &codecName,QObject *parent = nullptr);
     ~VideoDecoderThread();
 
     void stop();
@@ -44,6 +44,7 @@ private:
     AVFrame *m_frame = nullptr;
     AVPacket *m_packet = nullptr;
     SwsContext *m_swsContext = nullptr;
+    QString mCodecName;
     int m_lastFrameWidth = 0;
     int m_lastFrameHeight = 0;
 

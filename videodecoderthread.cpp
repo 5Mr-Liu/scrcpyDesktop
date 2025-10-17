@@ -20,8 +20,8 @@ quint32 read_be32(const uchar *data) {
     return qFromBigEndian(val);
 }
 
-VideoDecoderThread::VideoDecoderThread(QObject *parent)
-    : QThread(parent), mRunning(false)
+VideoDecoderThread::VideoDecoderThread(const QString &codecName,QObject *parent)
+    : QThread(parent), mRunning(false), mCodecName(codecName)
 {
 }
 
@@ -41,10 +41,18 @@ void VideoDecoderThread::stop()
 
 bool VideoDecoderThread::initializeDecoder()
 {
-    qDebug() << "[Decoder Init] Finding decoder H264...";
-    const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+    AVCodecID codecId;
+    if (mCodecName.toLower() == "h265") {
+        codecId = AV_CODEC_ID_HEVC; // H.265 在 FFmpeg 中被称为 HEVC
+    } else if (mCodecName.toLower() == "av1") {
+        codecId = AV_CODEC_ID_AV1;
+    } else {
+        codecId = AV_CODEC_ID_H264; // 默认为 H.264
+    }
+    qDebug() << "[Decoder Init] Finding decoder" << mCodecName.toUpper() << "...";
+    const AVCodec *codec = avcodec_find_decoder(codecId);
     if (!codec) {
-        emit decodingFinished("错误：找不到 H.264 解码器。");
+        emit decodingFinished(QString("错误：找不到 %1 解码器。请检查您的FFmpeg库是否支持。").arg(mCodecName.toUpper()));
         return false;
     }
     qDebug() << "[Decoder Init] Decoder found.";

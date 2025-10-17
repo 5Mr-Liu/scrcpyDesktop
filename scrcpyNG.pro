@@ -20,6 +20,7 @@ SOURCES += \
 
 HEADERS += \
     adbprocess.h \
+    androidkeycodes.h \
     controlsender.h \
     devicemanager.h \
     devicewindow.h \

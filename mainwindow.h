@@ -2,7 +2,7 @@
 #include "devicemanager.h" // 包含头文件
 #include "devicewindow.h"
 #include <QMap>
-
+#include "scrcpyoptions.h"
 namespace Ui {
 class MainWindow;
 }
@@ -30,6 +30,9 @@ private slots:
     // 当一个 DeviceWindow 关闭时，这个槽会被调用
     void onDeviceWindowClosed(const QString &serial);
 
+    void on_comboBox_videoSource_currentIndexChanged(int index);
+    void on_btn_saveRecordAs_clicked();
+
 private:
     Ui::MainWindow *ui;
     DeviceManager *mDeviceManager; // 声明 DeviceManager 实例
@@ -37,4 +40,8 @@ private:
     // 使用 QMap 来管理所有已打开的设备窗口
     // key 是设备序列号, value 是指向 DeviceWindow 的指针
     QMap<QString, DeviceWindow*> mDeviceWindows;
+
+    ScrcpyOptions gatherScrcpyOptions() const;
+    // 新增验证函数
+    bool validateOptions(const ScrcpyOptions &options);
 };
