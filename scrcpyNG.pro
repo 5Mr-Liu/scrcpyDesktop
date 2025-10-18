@@ -16,6 +16,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     scrcpyoptions.cpp \
+    uistatemanager.cpp \
     videodecoderthread.cpp
 
 HEADERS += \
@@ -26,6 +27,7 @@ HEADERS += \
     devicewindow.h \
     mainwindow.h \
     scrcpyoptions.h \
+    uistatemanager.h \
     videodecoderthread.h
 
 FORMS += \

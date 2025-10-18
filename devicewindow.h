@@ -26,6 +26,7 @@ public:
 
 signals:
     void windowClosed(const QString &serial);
+    void statusUpdated(const QString &serial, const QString &deviceName, const QSize &frameSize);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -79,6 +80,7 @@ private:
     AdbProcess *mServerProcess;
     QTcpSocket *mVideoSocket;
     VideoDecoderThread *mDecoder;
+    QString mDeviceName;
 
     // --- 新增 ---
     ControlSender *mControlSender; // 控制发送器实例

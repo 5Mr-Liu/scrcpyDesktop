@@ -32,16 +32,41 @@ DeviceWindow::DeviceWindow(const QString &serial,const ScrcpyOptions &options, Q
     mCurrentFrameSize(0,0)
 {
     ui->setupUi(this);
-    setWindowTitle(QString("设备 - %1").arg(mSerial));
+    // --- 1. 应用客户端窗口设置 ---
+    // 设置窗口标题
+    if (!mOptions.window_title.isEmpty()) {
+        setWindowTitle(mOptions.window_title);
+    } else {
+        setWindowTitle(QString("设备 - %1").arg(mSerial));
+    }
+    // 设置窗口标志 (置顶、无边框)
+    Qt::WindowFlags flags = windowFlags();
+    if (mOptions.always_on_top) {
+        flags |= Qt::WindowStaysOnTopHint;
+    }
+    if (mOptions.window_borderless) {
+        flags |= Qt::FramelessWindowHint;
+    }
+    setWindowFlags(flags);
+    // --- 2. 初始化 UI 和组件 ---
     ui->label_videoStream->setStyleSheet("color: white; background-color: black;");
     ui->label_videoStream->setAlignment(Qt::AlignCenter);
     ui->label_videoStream->setText("正在连接设备...");
-
-    mOptions.control = true;
+    // ▲▲▲ 【问题修复】删除 mOptions.control = true; 这一行硬编码 ▲▲▲
+    // 现在 mOptions.control 的值将由 MainWindow 的 UI 决定
     setupToolbarActions();
     this->setFocusPolicy(Qt::StrongFocus);
-
+    // 延迟启动流，给窗口初始化留出时间
     QTimer::singleShot(100, this, &DeviceWindow::startStreaming);
+    // --- 3. 处理全屏 ---
+    // 全屏必须在 show() 之后调用，所以使用延迟定时器
+    if (mOptions.fullscreen) {
+        QTimer::singleShot(250, this, [this](){
+            if (this) { // 检查以防窗口已被关闭
+                this->showFullScreen();
+            }
+        });
+    }
 }
 
 DeviceWindow::~DeviceWindow()
@@ -59,6 +84,32 @@ QString DeviceWindow::getSerial() const
 void DeviceWindow::closeEvent(QCloseEvent *event)
 {
     qDebug() << "Closing window for" << mSerial;
+    if (!mOptions.record_file.isEmpty()) {
+        // 存在录制任务，执行 adb pull
+        QString format = (mOptions.record_format == "auto" ? "mkv" : mOptions.record_format);
+
+        // 与 ScrcpyOptions 中构造的设备路径保持一致
+        QString device_path = QString("/sdcard/%1.%2").arg("temp_record_file").arg(format);
+        QString pc_path = mOptions.record_file;
+        qDebug() << "Pulling record file from" << device_path << "to" << pc_path;
+        // 创建一个 adb process 来拉取文件
+        AdbProcess *pullProcess = new AdbProcess(); // 不指定父对象，让它独立运行
+        connect(pullProcess, &AdbProcess::finished, this, [this, pullProcess, device_path, pc_path](int exitCode, QProcess::ExitStatus status){
+            if (status == QProcess::NormalExit && exitCode == 0) {
+                qInfo() << "Record file pulled successfully to" << pc_path;
+                QMessageBox::information(nullptr, "录制成功", QString("录制文件已成功保存到：\n%1").arg(QDir::toNativeSeparators(pc_path)));
+                // 拉取成功后，删除设备上的临时文件
+                AdbProcess *rmProcess = new AdbProcess();
+                connect(rmProcess, &AdbProcess::finished, rmProcess, &QObject::deleteLater);
+                rmProcess->execute(mSerial, {"shell", "rm", device_path});
+            } else {
+                qWarning() << "Failed to pull record file:" << pullProcess->getOutput();
+                QMessageBox::warning(nullptr, "录制失败", "无法从设备拉取录制文件。\n" + pullProcess->getOutput());
+            }
+            pullProcess->deleteLater();
+        });
+        pullProcess->execute(mSerial, {"pull", device_path, pc_path});
+    }
     stopAll();
     emit windowClosed(mSerial);
     event->accept();
@@ -172,7 +223,14 @@ void DeviceWindow::connectToSocketWithRetry()
         connect(mDecoder, &VideoDecoderThread::frameDecoded, this, &DeviceWindow::onFrameDecoded);
         connect(mDecoder, &VideoDecoderThread::decodingFinished, this, &DeviceWindow::onDecodingFinished);
         connect(mDecoder, &VideoDecoderThread::deviceNameReady, this, [this](const QString &name){
-            setWindowTitle(QString("%1 - %2").arg(name).arg(mSerial));
+            mDeviceName = name;
+            if (mOptions.window_title.isEmpty()) {
+                // 如果没有自定义标题，才使用默认的 "设备名 - 序列号" 格式
+                setWindowTitle(QString("%1 - %2").arg(name).arg(mSerial));
+            }
+            if(!mCurrentFrameSize.isEmpty()){
+                emit statusUpdated(mSerial,mDeviceName,mCurrentFrameSize);
+            }
         });
         mDecoder->start();
     }
@@ -233,6 +291,9 @@ void DeviceWindow::onFrameDecoded(const QImage &frame)
     QSize newFrameSize = frame.size();
     if (!newFrameSize.isEmpty() && newFrameSize != mCurrentFrameSize) {
         mCurrentFrameSize = newFrameSize;
+        if (!mDeviceName.isEmpty()) {
+            emit statusUpdated(mSerial, mDeviceName, mCurrentFrameSize);
+        }
         qDebug() << "Frame size changed to:" << newFrameSize << ". Adjusting window size...";
         QSize videoDisplaySize;
         double aspectRatio = static_cast<double>(newFrameSize.width()) / newFrameSize.height();
@@ -416,17 +477,17 @@ void DeviceWindow::keyReleaseEvent(QKeyEvent *event)
 // ========== 新增：工具栏按钮槽函数实现 ==========
 void DeviceWindow::setupToolbarActions()
 {
-    connect(ui->action_power, &QAction::triggered, this, &DeviceWindow::on_action_power_triggered);
-    connect(ui->action_volumeUp, &QAction::triggered, this, &DeviceWindow::on_action_volumeUp_triggered);
-    connect(ui->action_volumeDown, &QAction::triggered, this, &DeviceWindow::on_action_volumeDown_triggered);
-    connect(ui->action_rotateDevice, &QAction::triggered, this, &DeviceWindow::on_action_rotateDevice_triggered);
-    connect(ui->action_home, &QAction::triggered, this, &DeviceWindow::on_action_home_triggered);
-    connect(ui->action_back, &QAction::triggered, this, &DeviceWindow::on_action_back_triggered);
-    connect(ui->action_appSwitch, &QAction::triggered, this, &DeviceWindow::on_action_appSwitch_triggered);
-    connect(ui->action_menu, &QAction::triggered, this, &DeviceWindow::on_action_menu_triggered);
-    connect(ui->action_expandNotifications, &QAction::triggered, this, &DeviceWindow::on_action_expandNotifications_triggered);
-    connect(ui->action_collapseNotifications, &QAction::triggered, this, &DeviceWindow::on_action_collapseNotifications_triggered);
-    connect(ui->action_screenshot, &QAction::triggered, this, &DeviceWindow::on_action_screenshot_triggered);
+    // connect(ui->action_power, &QAction::triggered, this, &DeviceWindow::on_action_power_triggered);
+    // connect(ui->action_volumeUp, &QAction::triggered, this, &DeviceWindow::on_action_volumeUp_triggered);
+    // connect(ui->action_volumeDown, &QAction::triggered, this, &DeviceWindow::on_action_volumeDown_triggered);
+    // connect(ui->action_rotateDevice, &QAction::triggered, this, &DeviceWindow::on_action_rotateDevice_triggered);
+    // connect(ui->action_home, &QAction::triggered, this, &DeviceWindow::on_action_home_triggered);
+    // connect(ui->action_back, &QAction::triggered, this, &DeviceWindow::on_action_back_triggered);
+    // connect(ui->action_appSwitch, &QAction::triggered, this, &DeviceWindow::on_action_appSwitch_triggered);
+    // connect(ui->action_menu, &QAction::triggered, this, &DeviceWindow::on_action_menu_triggered);
+    // connect(ui->action_expandNotifications, &QAction::triggered, this, &DeviceWindow::on_action_expandNotifications_triggered);
+    // connect(ui->action_collapseNotifications, &QAction::triggered, this, &DeviceWindow::on_action_collapseNotifications_triggered);
+    // connect(ui->action_screenshot, &QAction::triggered, this, &DeviceWindow::on_action_screenshot_triggered);
 }
 void DeviceWindow::on_action_power_triggered()
 {
