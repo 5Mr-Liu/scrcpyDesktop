@@ -4,72 +4,87 @@
 #include <QString>
 #include <QStringList>
 
+/**
+ * @file scrcpyoptions.h
+ * @brief Defines the ScrcpyOptions class, which encapsulates all configuration parameters for a scrcpy session.
+ */
+
+/**
+ * @class ScrcpyOptions
+ * @brief Holds all possible command-line options for the scrcpy server.
+ *
+ * This class serves as a data structure to store the configuration for a scrcpy session.
+ * It provides a convenient way to pass settings from the UI to the process that starts
+ * the scrcpy server on the Android device. It also includes a method to convert these
+ * options into the format required by the 'adb shell' command.
+ */
 class ScrcpyOptions
 {
 public:
     ScrcpyOptions();
 
-    // 将所有选项转换为 adb shell 参数列表
+    /**
+     * @brief Converts all stored options into a list of arguments for the 'adb shell' command.
+     * @return A QStringList containing the formatted arguments to start the scrcpy server.
+     */
     QStringList toAdbShellArgs() const;
 
-    // --- 核心与通用参数 ---
-    QString version;
-    QString logLevel;
-    bool tunnel_forward;
+    // --- Core & General Parameters ---
+    QString version;          // The version of the scrcpy server to be executed.
+    QString logLevel;         // Log level for the server (e.g., "info", "debug").
+    bool tunnel_forward;      // Whether to use a forward tunnel for the connection.
 
-    // --- 视频参数 ---
-    bool video;
-    QString video_source; // display, camera
-    quint32 video_bit_rate;
-    QString video_codec;
-    quint16 max_size;
-    quint16 max_fps;
-    quint8 display_id;
-    QString crop;
-    // ... 其他视频参数可以按需添加
+    // --- Video Parameters ---
+    bool video;               // Enable/disable video streaming.
+    QString video_source;     // Source of the video ("display" or "camera").
+    quint32 video_bit_rate;   // Video bitrate in bits per second.
+    QString video_codec;      // Video codec to use ("h264", "h265", "av1").
+    quint16 max_size;         // Maximum video dimension (width or height). 0 for unlimited.
+    quint16 max_fps;          // Maximum frames per second. 0 for unlimited.
+    quint8 display_id;        // The ID of the display to mirror.
+    QString crop;             // Crop the video to a specific dimension ("width:height:x:y").
 
-    // --- 音频参数 ---
-    bool audio;
-    quint32 audio_bit_rate;
-    QString audio_codec;
-    QString audio_source;
-    quint16 audio_buffer;
-    bool audio_dup;
-    bool require_audio;
-    // ... 其他音频参数
+    // --- Audio Parameters ---
+    bool audio;               // Enable/disable audio forwarding.
+    quint32 audio_bit_rate;   // Audio bitrate in bits per second.
+    QString audio_codec;      // Audio codec to use ("opus", "aac", "flac", "raw").
+    QString audio_source;     // Source of the audio ("output", "mic").
+    quint16 audio_buffer;     // Audio buffer size in milliseconds.
+    bool audio_dup;           // Duplicate audio output to the device's speakers.
+    bool require_audio;       // Abort if audio capture fails.
 
-    // --- 摄像头参数 (仅当 video_source == "camera" 时有效) ---
-    QString camera_id;
-    QString camera_facing; // front, back, external
-    QString camera_size; // "width:height"
-    quint8 camera_fps;
-    bool camera_high_speed;
+    // --- Camera Parameters (Effective only when video_source == "camera") ---
+    QString camera_id;        // The specific ID of the camera to use.
+    QString camera_facing;    // Camera facing direction ("front", "back", "external").
+    QString camera_size;      // Camera resolution, e.g., "1920:1080".
+    quint8 camera_fps;        // Camera frames per second.
+    bool camera_high_speed;   // Enable high-speed camera mode if available.
 
-    // --- 控制与交互参数 ---
-    bool control;
-    bool show_touches;
-    bool clipboard_autosync;
-    QString keyboard_mode; // sdk, uhid, aoa, disabled
-    QString mouse_mode; // sdk, uhid, aoa, disabled
-    bool otg;
+    // --- Control & Interaction Parameters ---
+    bool control;             // Enable/disable device control (input events).
+    bool show_touches;        // Show physical touches on the device's screen.
+    bool clipboard_autosync;  // Enable automatic clipboard synchronization.
+    QString keyboard_mode;    // Keyboard injection mode ("sdk", "uhid", "aoa", "disabled").
+    QString mouse_mode;       // Mouse injection mode ("sdk", "uhid", "aoa", "disabled").
+    bool otg;                 // Run in OTG mode (keyboard/mouse as physical devices).
 
+    // --- Device & Power Management Parameters ---
+    bool stay_awake;          // Prevent the device from sleeping.
+    bool power_off_on_close;  // Turn the device screen off when the client closes.
 
-    // --- 设备与电源管理参数 ---
-    bool stay_awake;
-    bool power_off_on_close;
-
-    // --- 窗口与录制参数 ---
-    // 下面这些参数是PC客户端用的，不会传递给 scrcpy-server
-    // 我们在 DeviceWindow 中处理它们，但为了统一管理，也放在这里
+    // --- Client-Side Window & Recording Parameters ---
+    // These options are used by the client (DeviceWindow) and are NOT passed to the scrcpy server,
+    // but are kept here for centralized management.
     bool fullscreen;
     bool always_on_top;
     bool window_borderless;
     QString window_title;
-    // 下面这些参数会传递给 scrcpy-server
-    QString record_file;
-    QString record_format; // mp4, mkv, ...
-    bool no_playback; // -N, 录制但不显示/播放
-    bool no_video_playback;
+
+    // These recording parameters ARE passed to the scrcpy server.
+    QString record_file;      // PC path to save the recording. The server will use a temp path.
+    QString record_format;    // Recording container format ("mp4", "mkv").
+    bool no_playback;         // Record but do not display the stream on the client.
+    bool no_video_playback;   // For audio-only mirroring, disable the black video window.
 };
 
 #endif // SCRCPYOPTIONS_H

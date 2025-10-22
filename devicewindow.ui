@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>设备 - [Serial Number]</string>
+   <string>Device - [Serial Number]</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -44,6 +44,9 @@
       <property name="text">
        <string/>
       </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
       <property name="alignment">
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
@@ -53,7 +56,7 @@
   </widget>
   <widget class="QToolBar" name="deviceControlToolbar">
    <property name="windowTitle">
-    <string>设备控制</string>
+    <string>Device Control</string>
    </property>
    <property name="movable">
     <bool>false</bool>
@@ -78,7 +81,6 @@
    <addaction name="action_volumeUp"/>
    <addaction name="action_volumeDown"/>
    <addaction name="separator"/>
-   <addaction name="action_rotateDevice"/>
    <addaction name="separator"/>
    <addaction name="action_home"/>
    <addaction name="action_back"/>
@@ -98,7 +100,7 @@
     <string>Home</string>
    </property>
    <property name="toolTip">
-    <string>主屏幕</string>
+    <string>Home Screen</string>
    </property>
   </action>
   <action name="action_back">
@@ -106,7 +108,7 @@
     <iconset theme="go-previous"/>
    </property>
    <property name="text">
-    <string>返回</string>
+    <string>Back</string>
    </property>
   </action>
   <action name="action_appSwitch">
@@ -114,10 +116,10 @@
     <iconset theme="view-app-grid"/>
    </property>
    <property name="text">
-    <string>多任务</string>
+    <string>App Switch</string>
    </property>
    <property name="toolTip">
-    <string>多任务/最近应用</string>
+    <string>Multitasking/Recent Apps</string>
    </property>
   </action>
   <action name="action_menu">
@@ -125,7 +127,7 @@
     <iconset theme="application-menu"/>
    </property>
    <property name="text">
-    <string>菜单</string>
+    <string>Menu</string>
    </property>
   </action>
   <action name="action_volumeUp">
@@ -133,7 +135,7 @@
     <iconset theme="audio-volume-high"/>
    </property>
    <property name="text">
-    <string>音量+</string>
+    <string>Volume +</string>
    </property>
   </action>
   <action name="action_volumeDown">
@@ -141,7 +143,7 @@
     <iconset theme="audio-volume-low"/>
    </property>
    <property name="text">
-    <string>音量-</string>
+    <string>Volume -</string>
    </property>
   </action>
   <action name="action_power">
@@ -149,21 +151,10 @@
     <iconset theme="system-shutdown"/>
    </property>
    <property name="text">
-    <string>电源</string>
+    <string>Power</string>
    </property>
    <property name="toolTip">
-    <string>电源键</string>
-   </property>
-  </action>
-  <action name="action_rotateDevice">
-   <property name="icon">
-    <iconset theme="object-rotate-right"/>
-   </property>
-   <property name="text">
-    <string>旋转</string>
-   </property>
-   <property name="toolTip">
-    <string>旋转设备屏幕</string>
+    <string>Power Button</string>
    </property>
   </action>
   <action name="action_expandNotifications">
@@ -171,10 +162,10 @@
     <iconset theme="mail-mark-unread"/>
    </property>
    <property name="text">
-    <string>通知栏</string>
+    <string>Notifications</string>
    </property>
    <property name="toolTip">
-    <string>展开通知栏</string>
+    <string>Expand Notification Panel</string>
    </property>
   </action>
   <action name="action_collapseNotifications">
@@ -182,7 +173,7 @@
     <iconset theme="mail-read"/>
    </property>
    <property name="text">
-    <string>收起通知</string>
+    <string>Collapse Notifications</string>
    </property>
   </action>
   <action name="action_screenshot">
@@ -190,7 +181,7 @@
     <iconset theme="camera-photo"/>
    </property>
    <property name="text">
-    <string>截图</string>
+    <string>Screenshot</string>
    </property>
   </action>
  </widget>

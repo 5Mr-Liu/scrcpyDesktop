@@ -1,5 +1,3 @@
-// mainwindow.h - 完整替换版
-
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -14,6 +12,14 @@ namespace Ui {
 class MainWindow;
 }
 
+/**
+ * @class MainWindow
+ * @brief The main application window and central controller.
+ *
+ * This class is responsible for the main user interface, managing device discovery,
+ * collecting user-configured scrcpy options, and launching DeviceWindow instances
+ * for each connected device. It also handles logging and UI state management.
+ */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -23,45 +29,101 @@ public:
     ~MainWindow();
 
 private slots:
-    // --- 核心逻辑槽 (非按钮点击) ---
+    // --- Core Logic Slots (Not directly tied to UI interaction) ---
+    /**
+     * @brief Slot to handle the updated list of devices from DeviceManager.
+     * @param devices The new list of detected devices.
+     */
     void onDevicesUpdated(const QList<DeviceInfo> &devices);
+
+    /**
+     * @brief Slot to receive and display log messages in the UI.
+     * @param message The message to log.
+     */
     void onLogMessage(const QString &message);
+
+    /**
+     * @brief Slot to handle cleanup when a DeviceWindow is closed.
+     * @param serial The serial number of the device whose window was closed.
+     */
     void onDeviceWindowClosed(const QString &serial);
 
-    // --- 按钮点击处理槽 (已重命名以避免自动连接) ---
-    // USB Tab
+    // --- Button Click Handler Slots (Manually connected in the constructor) ---
     void handleConnectUsbClick();
     void handleEnableTcpIpClick();
-
-    // WiFi Tab
     void handleConnectWifiClick();
     void handleRemoveWifiClick();
-
-    // Serial Tab
     void handleConnectSerialClick();
-
-    // 全局操作
     void handleDisconnectAllClick();
     void handleKillAdbClick();
-
-    // 录制与文件
-    // **注意**: 你的 UI 文件中按钮是 'btn_saveRecordAs'
-    // 你的 cpp 文件中实现是 'on_pushButton_recordFile_clicked'
-    // 我们将它们统一起来
     void handleSaveRecordAsClick();
-
-    // 日志
     void handleClearLogsClick();
 
+    // --- Menu Bar Action Slots ---
+
+    // File Menu
+    void handleSaveProfileAction();
+    void handleLoadProfileAction();
+    void handleSettingsAction();
+    void handleExitAction();
+
+    // Device Menu
+    void handleConnectAllUsbAction();
+
+    // View Menu
+    void handleToggleLeftPanel(bool checked);
+    void handleToggleBottomPanel(bool checked);
+    void handleAppAlwaysOnTop(bool checked);
+    void handleGridLayoutAction();
+
+    // Help Menu
+    void handleAboutAction();
+    void handleShortcutsAction();
+    void handleCheckUpdatesAction();
+
 private:
+    /**
+     * @brief Centralizes all menu action signal/slot connections.
+     */
+    void setupMenuConnections();
+
+    /**
+     * @brief Saves the current UI settings to an INI file.
+     * @param filePath The path of the file to save to.
+     */
+    void saveUiToSettings(const QString& filePath);
+
+    /**
+     * @brief Loads UI settings from an INI file.
+     * @param filePath The path of the file to load from.
+     */
+    void loadUiFromSettings(const QString& filePath);
+
+    /**
+
+     * @brief Gathers all scrcpy options from the UI controls.
+     * @return A ScrcpyOptions struct populated with the current settings.
+     */
+    ScrcpyOptions gatherScrcpyOptions() const;
+
+    /**
+     * @brief Validates the collected ScrcpyOptions before starting a session.
+     * @param options The options to validate.
+     * @return True if options are valid, false otherwise.
+     */
+    bool validateOptions(const ScrcpyOptions &options);
+
+    /**
+     * @brief Creates and shows a new DeviceWindow for a specified device.
+     * @param serial The serial number of the device to connect to.
+     */
+    void startDeviceWindow(const QString &serial);
+
     Ui::MainWindow *ui;
     DeviceManager *mDeviceManager;
+    // A map to keep track of active device windows, using the serial number as the key.
     QMap<QString, DeviceWindow*> mDeviceWindows;
     UiStateManager *mUiStateManager;
-
-    ScrcpyOptions gatherScrcpyOptions() const;
-    bool validateOptions(const ScrcpyOptions &options);
-    void startDeviceWindow(const QString &serial);
 };
 
 #endif // MAINWINDOW_H

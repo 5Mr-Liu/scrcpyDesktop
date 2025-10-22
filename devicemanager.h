@@ -6,12 +6,31 @@
 #include <QStringList>
 #include <QList>
 
-// 用一个结构体来清晰地表示一个设备的信息
+/**
+ * @file devicemanager.h
+ * @brief Defines the DeviceManager class for detecting and managing Android devices via ADB.
+ */
+
+/**
+ * @struct DeviceInfo
+ * @brief A simple structure to hold information about a single detected Android device.
+ *
+ * This struct cleanly encapsulates the data parsed from the 'adb devices' command output.
+ */
 struct DeviceInfo {
-    QString serial;
-    QString status; // "device", "offline", "unauthorized" 等
+    QString serial; // The unique serial number of the device.
+    QString status; // The connection status, e.g., "device", "offline", "unauthorized".
 };
 
+/**
+ * @class DeviceManager
+ * @brief Manages the discovery of Android devices connected to the system.
+ *
+ * This class uses QProcess to run the 'adb devices' command asynchronously.
+ * It parses the output of the command and emits a signal containing a list
+ * of all found devices. It also provides logging signals to communicate its
+ * status to the user interface.
+ */
 class DeviceManager : public QObject
 {
     Q_OBJECT
@@ -20,19 +39,40 @@ public:
     ~DeviceManager();
 
 public slots:
-    // 这个槽函数将由 MainWindow 的按钮触发
+    /**
+     * @brief Initiates a scan for connected Android devices.
+     *
+     * This public slot can be triggered, for instance, by a button click in the UI.
+     * It starts the 'adb devices' command asynchronously.
+     */
     void refreshDevices();
 
 signals:
-    // 当设备列表更新后，发射这个信号，将新的设备列表传递出去
+    /**
+     * @brief Emitted when the device scan is complete and the list of devices has been updated.
+     * @param devices A list of DeviceInfo structs representing the found devices.
+     */
     void devicesUpdated(const QList<DeviceInfo> &devices);
-    void logMessage(const QString &message); // 用于向主窗口发送日志
+
+    /**
+     * @brief Emitted to provide status updates or error messages to the UI for logging.
+     * @param message The log message to be displayed.
+     */
+    void logMessage(const QString &message);
 
 private slots:
-    // 当 adb 进程执行完毕时，这个内部槽会被调用
+    /**
+     * @brief An internal slot that is called when the adb QProcess finishes.
+     *
+     * This slot handles the result of the 'adb devices' command, parsing its output
+     * or reporting any errors that occurred.
+     * @param exitCode The exit code of the process.
+     * @param exitStatus The exit status (e.g., normal exit or crash).
+     */
     void onAdbProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
+    // The QProcess instance used to execute adb commands.
     QProcess *mAdbProcess;
 };
 

@@ -2,17 +2,25 @@
 #include <QDebug>
 #include <QRegularExpression>
 
+/**
+ * @file devicemanager.cpp
+ * @brief Implementation of the DeviceManager class.
+ */
+
 DeviceManager::DeviceManager(QObject *parent) : QObject(parent)
 {
     mAdbProcess = new QProcess(this);
 
-    // 连接 QProcess 的 finished 信号，以便在命令执行完后得到通知
+    // Connect the QProcess::finished signal to our handler slot.
+    // This is the core of the asynchronous design: when the adb command completes,
+    // our onAdbProcessFinished method will be automatically invoked.
     connect(mAdbProcess, &QProcess::finished, this, &DeviceManager::onAdbProcessFinished);
 }
 
 DeviceManager::~DeviceManager()
 {
-    // 确保进程在对象销毁时被清理
+    // Ensure the adb process is cleaned up when the DeviceManager object is destroyed.
+    // This prevents orphaned adb processes if the application closes while a scan is running.
     if (mAdbProcess->state() == QProcess::Running) {
         mAdbProcess->kill();
         mAdbProcess->waitForFinished();
@@ -21,45 +29,61 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::refreshDevices()
 {
-    // 如果上次的扫描还在进行中，就不要开始新的扫描
+    // Prevent starting a new scan if one is already in progress.
     if (mAdbProcess->state() == QProcess::Running) {
-        emit logMessage("正在扫描设备，请稍候...");
+        emit logMessage("Device scan is already in progress, please wait...");
         return;
     }
 
-    emit logMessage("开始扫描 USB 设备 (adb devices)...");
-    // 启动 adb devices 命令
-    QString adbPath = "scrcpy-win64-v3.3.3/adb.exe";
-    mAdbProcess->start(adbPath, QStringList() << "devices");
+    emit logMessage("Starting USB device scan (adb devices)...");
+
+    // Start the 'adb devices' command.
+    // Note: This assumes 'adb' is in the system's PATH. If not, a full path must be provided.
+    // For example: "C:/path/to/platform-tools/adb.exe"
+    // The previous hardcoded path "scrcpy-win64-v3.3.3/adb.exe" is not portable.
+    mAdbProcess->start("adb", QStringList() << "devices");
 }
 
 void DeviceManager::onAdbProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    // First, check if the process crashed.
     if (exitStatus == QProcess::CrashExit) {
-        emit logMessage("错误：adb 进程崩溃。");
+        emit logMessage("Error: The adb process crashed.");
         return;
     }
+
+    // Check if the command executed successfully. A non-zero exit code indicates an error.
     if (exitCode != 0) {
-        emit logMessage("错误：adb 命令执行失败。请确保 adb 环境配置正确。");
+        emit logMessage("Error: 'adb devices' command failed to execute. Please ensure adb is correctly configured in your system's PATH.");
+        // Read and display the standard error output from adb for more detailed diagnostics.
         QString errorOutput = mAdbProcess->readAllStandardError();
         if (!errorOutput.isEmpty()) {
             emit logMessage("ADB Error: " + errorOutput);
         }
         return;
     }
+
+    // Read the standard output from the successfully executed command.
     QString output = mAdbProcess->readAllStandardOutput();
 
     QList<DeviceInfo> devices;
-    // 按行分割输出
-    // VVVV--- 关键修改 2 ---VVVV
+
+    // Split the output into individual lines.
+    // Using QRegularExpression("[\r\n]") handles both Windows (CRLF) and Unix (LF) line endings.
     QStringList lines = output.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+
+    // Iterate over each line to parse device information.
     for (const QString &line : lines) {
+        // The first line of the output is "List of devices attached", which should be ignored.
         if (line.startsWith("List of devices")) {
             continue;
         }
-        // VVVV--- 关键修改 3 ---VVVV
+
+        // Split the line by one or more whitespace characters to separate the serial and status.
+        // Example line: "emulator-5554   device"
         QStringList parts = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 
+        // A valid device line consists of exactly two parts: [serial, status].
         if (parts.size() == 2) {
             DeviceInfo device;
             device.serial = parts[0];
@@ -67,6 +91,8 @@ void DeviceManager::onAdbProcessFinished(int exitCode, QProcess::ExitStatus exit
             devices.append(device);
         }
     }
-    emit logMessage(QString("扫描完成，发现 %1 个设备。").arg(devices.size()));
+
+    // Report the results and emit the signal with the updated device list.
+    emit logMessage(QString("Scan complete. Found %1 device(s).").arg(devices.size()));
     emit devicesUpdated(devices);
 }

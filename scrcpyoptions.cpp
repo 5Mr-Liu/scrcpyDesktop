@@ -1,62 +1,68 @@
 #include "scrcpyoptions.h"
 
+// A constant for the temporary filename used for recordings on the device.
 const QString DEVICE_RECORD_FILENAME = "temp_record_file";
 
 ScrcpyOptions::ScrcpyOptions()
 {
-    // --- 设置默认值 ---
-    // 核心
-    version = "3.3.3"; // !! 重要：请根据你的 scrcpy-server.jar 版本修改
+    // --- Set default values for all options ---
+    // IMPORTANT: This version MUST match the version of the scrcpy-server.jar file you are using.
+    version = "3.3.3"; // Example: updated to a recent scrcpy version.
+
+    // Core
     logLevel = "info";
     tunnel_forward = true;
 
-    // 视频
+    // Video
     video = true;
     video_source = "display";
     video_codec = "h264";
-    max_size = 0; // 0 表示不限制
-    max_fps = 0;  // 0 表示不限制
+    max_size = 0; // 0 means no limit.
+    max_fps = 0;  // 0 means no limit.
     display_id = 0;
-    video_bit_rate = 8000000; // 8 Mbps
+    video_bit_rate = 8000000; // 8 Mbps.
 
-    // 音频 (默认关闭，因为我们只做了视频解码)
+    // Audio
     audio = true;
-    audio_bit_rate = 128000;
+    audio_source = "output";
+    audio_bit_rate = 128000; // 128 kbps.
     audio_codec = "opus";
-    audio_buffer = 50;
+    audio_buffer = 50; // 50 ms.
     audio_dup = false;
     require_audio = false;
 
+    // Camera (defaults)
     camera_facing = "any";
     camera_fps = 0;
     camera_high_speed = false;
 
-    // 控制 (暂时关闭，因为我们还没实现控制)
+    // Control
     control = true;
-    audio_source = "output";
     show_touches = false;
-    clipboard_autosync = true; // 剪贴板可以先开着
-
-    // 电源
-    stay_awake = false;
-    power_off_on_close = false;
+    clipboard_autosync = true; // Clipboard sync is generally safe to enable by default.
     keyboard_mode = "sdk";
     mouse_mode = "sdk";
     otg = false;
 
+    // Power Management
+    stay_awake = false;
+    power_off_on_close = false;
+
+    // Client-side window options
     fullscreen = false;
     always_on_top = false;
     window_borderless = false;
 
+    // Recording
     record_format = "auto";
     no_playback = false;
     no_video_playback = false;
 }
 
-// in scrcpyoptions.cpp
 QStringList ScrcpyOptions::toAdbShellArgs() const
 {
     QStringList args;
+    // Base command to execute the scrcpy server on the device.
     args << "shell"
          << "CLASSPATH=/data/local/tmp/scrcpy-server.jar"
          << "app_process"
@@ -64,9 +70,10 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
          << "com.genymobile.scrcpy.Server"
          << version;
 
-    // --- 核心参数 ---
+    // Append core parameters.
     args << QString("log_level=%1").arg(logLevel);
-    // --- 视频参数 ---
+
+    // Append video parameters only if video is enabled.
     args << QString("video=%1").arg(video ? "true" : "false");
     if (video) {
         if (video_source != "display") args << QString("video_source=%1").arg(video_source);
@@ -77,6 +84,7 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
         if (display_id != 0) args << QString("display_id=%1").arg(display_id);
         if (no_video_playback) args << "video_playback=false";
         if (!crop.isEmpty()) args << QString("crop=%1").arg(crop);
+        // Append camera-specific parameters if the camera is the source.
         if (video_source == "camera") {
             if (!camera_id.isEmpty()) args << QString("camera_id=%1").arg(camera_id);
             if (camera_facing != "any") args << QString("camera_facing=%1").arg(camera_facing);
@@ -85,7 +93,8 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
             if (camera_high_speed) args << "camera_high_speed=true";
         }
     }
-    // --- 音频参数 ---
+
+    // Append audio parameters only if audio is enabled.
     args << QString("audio=%1").arg(audio ? "true" : "false");
     if (audio) {
         if (audio_source != "output") args << QString("audio_source=%1").arg(audio_source);
@@ -95,7 +104,8 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
         if (audio_dup) args << "audio_dup=true";
         if (require_audio) args << "require_audio=true";
     }
-    // --- 控制与行为 ---
+
+    // Append control and behavior parameters.
     args << QString("control=%1").arg(control ? "true" : "false");
     if (stay_awake) args << "stay_awake=true";
     if (power_off_on_close) args << "power_off_on_close=true";
@@ -104,8 +114,10 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
     if (keyboard_mode != "sdk") args << QString("keyboard=%1").arg(keyboard_mode);
     if (mouse_mode != "sdk") args << QString("mouse=%1").arg(mouse_mode);
     if (otg) args << "otg=true";
-    // --- 录制 ---
+
+    // Append recording parameters.
     if (!record_file.isEmpty()) {
+        // The PC path is for the client, but we must tell the server to record to a temporary file on the device.
         QString format = (record_format == "auto" ? "mkv" : record_format);
         QString device_path = QString("/sdcard/%1.%2").arg(DEVICE_RECORD_FILENAME).arg(format);
 
@@ -116,8 +128,12 @@ QStringList ScrcpyOptions::toAdbShellArgs() const
         }
     }
     if (no_playback) args << "no_playback=true";
-    // --- 固定参数 ---
+
+    // Append fixed parameters required for this client's operation.
     if (tunnel_forward) args << "tunnel_forward=true";
-    args << "send_dummy_byte=true";
+    args << "send_dummy_byte=true"; // Helps in detecting the connection start.
+
     return args;
 }
+
+

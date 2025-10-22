@@ -8,38 +8,30 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
-
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QDateTime>
 #include "androidkeycodes.h"
 
-const int BASE_HEIGHT_PORTRAIT = 800;  // 竖屏时，我们希望窗口内容区的高度
-const int BASE_WIDTH_LANDSCAPE = 960; // 横屏时，我们希望窗口内容区的宽度
-
-DeviceWindow::DeviceWindow(const QString &serial,const ScrcpyOptions &options, QWidget *parent) :
+DeviceWindow::DeviceWindow(const QString &serial, const ScrcpyOptions &options, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DeviceWindow),
     mSerial(serial),
     mOptions(options),
     mLocalPort(27183),
-    mServerProcess(nullptr),
-    mVideoSocket(nullptr),
-    mDecoder(nullptr),
-    mControlSender(nullptr),
     mConnectionRetries(0),
-    mCurrentFrameSize(0,0)
+    mCurrentFrameSize(0, 0)
 {
     ui->setupUi(this);
-    // --- 1. 应用客户端窗口设置 ---
-    // 设置窗口标题
+
+    // Apply window settings
     if (!mOptions.window_title.isEmpty()) {
         setWindowTitle(mOptions.window_title);
     } else {
-        setWindowTitle(QString("设备 - %1").arg(mSerial));
+        setWindowTitle(tr("Device - %1").arg(mSerial));
     }
-    // 设置窗口标志 (置顶、无边框)
+
     Qt::WindowFlags flags = windowFlags();
     if (mOptions.always_on_top) {
         flags |= Qt::WindowStaysOnTopHint;
@@ -48,30 +40,39 @@ DeviceWindow::DeviceWindow(const QString &serial,const ScrcpyOptions &options, Q
         flags |= Qt::FramelessWindowHint;
     }
     setWindowFlags(flags);
-    // --- 2. 初始化 UI 和组件 ---
+
+    // OPTIMIZATION: Pre-configure video label for best performance
     ui->label_videoStream->setStyleSheet("color: white; background-color: black;");
     ui->label_videoStream->setAlignment(Qt::AlignCenter);
-    ui->label_videoStream->setText("正在连接设备...");
-    // ▲▲▲ 【问题修复】删除 mOptions.control = true; 这一行硬编码 ▲▲▲
-    // 现在 mOptions.control 的值将由 MainWindow 的 UI 决定
+    ui->label_videoStream->setText(tr("Connecting to device..."));
+
+    // CRITICAL: Enable automatic scaling - this is KEY for performance
+    // QLabel will handle scaling internally using hardware acceleration
+    ui->label_videoStream->setScaledContents(true);
+
     setupToolbarActions();
     this->setFocusPolicy(Qt::StrongFocus);
-    // 延迟启动流，给窗口初始化留出时间
+
+    // Delay start to allow window initialization
     QTimer::singleShot(100, this, &DeviceWindow::startStreaming);
-    // --- 3. 处理全屏 ---
-    // 全屏必须在 show() 之后调用，所以使用延迟定时器
+
+    // Handle fullscreen after window is shown
     if (mOptions.fullscreen) {
         QTimer::singleShot(250, this, [this](){
-            if (this) { // 检查以防窗口已被关闭
+            if (this) {
                 this->showFullScreen();
             }
         });
     }
+
+#ifdef QT_DEBUG
+    mLastFpsTime = QDateTime::currentMSecsSinceEpoch();
+#endif
 }
 
 DeviceWindow::~DeviceWindow()
 {
-    qDebug() << "DeviceWindow for" << mSerial << "is being destroyed.";
+    qDebug() << "[DeviceWindow]" << mSerial << "destructor called";
     stopAll();
     delete ui;
 }
@@ -81,35 +82,70 @@ QString DeviceWindow::getSerial() const
     return mSerial;
 }
 
+void DeviceWindow::showError(const QString &title, const QString &message, bool fatal)
+{
+    qCritical() << "[DeviceWindow]" << mSerial << "-" << title << ":" << message;
+
+    if (isVisible()) {
+        QMessageBox::critical(this, title, message);
+    }
+
+    if (fatal) {
+        QTimer::singleShot(100, this, &DeviceWindow::close);
+    }
+}
+
 void DeviceWindow::closeEvent(QCloseEvent *event)
 {
-    qDebug() << "Closing window for" << mSerial;
-    if (!mOptions.record_file.isEmpty()) {
-        // 存在录制任务，执行 adb pull
-        QString format = (mOptions.record_format == "auto" ? "mkv" : mOptions.record_format);
+    qDebug() << "[DeviceWindow] Closing window for" << mSerial;
 
-        // 与 ScrcpyOptions 中构造的设备路径保持一致
+    // Handle recording file pull with SAFE this pointer
+    if (!mOptions.record_file.isEmpty()) {
+        QString format = (mOptions.record_format == "auto" ? "mkv" : mOptions.record_format);
         QString device_path = QString("/sdcard/%1.%2").arg("temp_record_file").arg(format);
         QString pc_path = mOptions.record_file;
-        qDebug() << "Pulling record file from" << device_path << "to" << pc_path;
-        // 创建一个 adb process 来拉取文件
-        AdbProcess *pullProcess = new AdbProcess(); // 不指定父对象，让它独立运行
-        connect(pullProcess, &AdbProcess::finished, this, [this, pullProcess, device_path, pc_path](int exitCode, QProcess::ExitStatus status){
-            if (status == QProcess::NormalExit && exitCode == 0) {
-                qInfo() << "Record file pulled successfully to" << pc_path;
-                QMessageBox::information(nullptr, "录制成功", QString("录制文件已成功保存到：\n%1").arg(QDir::toNativeSeparators(pc_path)));
-                // 拉取成功后，删除设备上的临时文件
-                AdbProcess *rmProcess = new AdbProcess();
-                connect(rmProcess, &AdbProcess::finished, rmProcess, &QObject::deleteLater);
-                rmProcess->execute(mSerial, {"shell", "rm", device_path});
-            } else {
-                qWarning() << "Failed to pull record file:" << pullProcess->getOutput();
-                QMessageBox::warning(nullptr, "录制失败", "无法从设备拉取录制文件。\n" + pullProcess->getOutput());
-            }
-            pullProcess->deleteLater();
-        });
+
+        qDebug() << "[DeviceWindow] Pulling recording from" << device_path << "to" << pc_path;
+
+        AdbProcess *pullProcess = new AdbProcess();
+
+        // CRITICAL FIX: Use QPointer to safely capture 'this'
+        QPointer<DeviceWindow> safeThis(this);
+
+        connect(pullProcess, &AdbProcess::finished, pullProcess,
+                [safeThis, pullProcess, device_path, pc_path](int exitCode, QProcess::ExitStatus status){
+                    if (status == QProcess::NormalExit && exitCode == 0) {
+                        qInfo() << "[DeviceWindow] Record file pulled successfully";
+
+                        // Only show message if window still exists
+                        if (safeThis) {
+                            QMessageBox::information(safeThis, tr("Recording Successful"),
+                                                     tr("The recording has been saved to:\n%1").arg(QDir::toNativeSeparators(pc_path)));
+                        }
+
+                        // Delete temp file from device
+                        AdbProcess *rmProcess = new AdbProcess();
+                        connect(rmProcess, &AdbProcess::finished, rmProcess, &QObject::deleteLater);
+
+                        if (safeThis) {
+                            rmProcess->execute(safeThis->mSerial, {"shell", "rm", device_path});
+                        } else {
+                            rmProcess->deleteLater();
+                        }
+                    } else {
+                        qWarning() << "[DeviceWindow] Failed to pull record file:" << pullProcess->getOutput();
+
+                        if (safeThis) {
+                            QMessageBox::warning(safeThis, tr("Recording Failed"),
+                                                 tr("Could not pull the recording from the device.\n") + pullProcess->getOutput());
+                        }
+                    }
+                    pullProcess->deleteLater();
+                });
+
         pullProcess->execute(mSerial, {"pull", device_path, pc_path});
     }
+
     stopAll();
     emit windowClosed(mSerial);
     event->accept();
@@ -117,25 +153,23 @@ void DeviceWindow::closeEvent(QCloseEvent *event)
 
 void DeviceWindow::startStreaming()
 {
-    ui->label_videoStream->setText("Step 1: Pushing server...");
-    qDebug() << "Step 1: Pushing server file to device...";
+    ui->label_videoStream->setText(tr("Step 1: Pushing server..."));
+    qDebug() << "[DeviceWindow] Step 1: Pushing server file";
     pushServer();
 }
 
 void DeviceWindow::pushServer()
 {
-    // !! 注意: 确保这里的文件名和版本号与你的 ScrcpyOptions 中的版本号一致
     QString serverFileName = QString("scrcpy-server-v%1").arg(mOptions.version);
     QString serverLocalPath = QDir(QCoreApplication::applicationDirPath()).filePath(serverFileName);
 
     if (!QFile::exists(serverLocalPath)) {
-        QString errorMsg = QString("找不到 scrcpy-server 文件！\n路径: %1").arg(serverLocalPath);
-        qCritical() << "FATAL:" << errorMsg;
-        QMessageBox::critical(this, "严重错误", errorMsg);
-        ui->label_videoStream->setText("错误: 找不到 server 文件！");
-        close();
+        showError(tr("Fatal Error"),
+                  tr("scrcpy-server file not found!\nPath: %1").arg(serverLocalPath),
+                  true);
         return;
     }
+
     const QString serverRemotePath = "/data/local/tmp/scrcpy-server.jar";
     AdbProcess *pushProcess = new AdbProcess(this);
     connect(pushProcess, &AdbProcess::finished, this, &DeviceWindow::onPushServerFinished);
@@ -145,44 +179,48 @@ void DeviceWindow::pushServer()
 void DeviceWindow::onPushServerFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     auto process = qobject_cast<AdbProcess*>(sender());
+    if (!process) return;
+
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-        qDebug() << "Server pushed successfully.";
-        ui->label_videoStream->setText("Step 2: Forwarding port...");
+        qDebug() << "[DeviceWindow] Server pushed successfully";
+        ui->label_videoStream->setText(tr("Step 2: Forwarding port..."));
         forwardPort();
     } else {
-        qCritical() << "Push server failed:" << process->getOutput();
-        QMessageBox::critical(this, "错误", "推送scrcpy-server文件失败！\n" + process->getOutput());
-        close();
+        showError(tr("Error"),
+                  tr("Failed to push scrcpy-server file!\n") + process->getOutput(),
+                  true);
     }
     process->deleteLater();
 }
 
 void DeviceWindow::forwardPort()
 {
-    // 注意：你的 ScrcpyOptions 默认 tunnel_forward=true，所以这里的 localabstract 必须是 scrcpy
     QString forwardRule = QString("tcp:%1").arg(mLocalPort);
     AdbProcess *forwardProcess = new AdbProcess(this);
     connect(forwardProcess, &AdbProcess::finished, this, &DeviceWindow::onForwardPortFinished);
     forwardProcess->execute(mSerial, {"forward", forwardRule, "localabstract:scrcpy"});
 }
 
-// 【关键修改】修复竞态条件的核心逻辑
 void DeviceWindow::onForwardPortFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     auto process = qobject_cast<AdbProcess*>(sender());
+    if (!process) return;
+
     if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-        qDebug() << "Port forwarded successfully.";
-        ui->label_videoStream->setText("Step 3: Starting server...");
+        qDebug() << "[DeviceWindow] Port forwarded successfully";
+        ui->label_videoStream->setText(tr("Step 3: Starting server..."));
         startServer();
-        qDebug() << "Step 4: Preparing to connect video socket with retries...";
-        ui->label_videoStream->setText("Step 4: Connecting video stream...");
-        mConnectionRetries = 0; // 重置计数器
-        // 给予服务器 500ms 的初始启动时间，然后开始连接【视频】Socket
+
+        qDebug() << "[DeviceWindow] Step 4: Preparing to connect video socket";
+        ui->label_videoStream->setText(tr("Step 4: Connecting video stream..."));
+        mConnectionRetries = 0;
+
+        // Initial delay before first connection attempt
         QTimer::singleShot(500, this, &DeviceWindow::connectToSocketWithRetry);
     } else {
-        qCritical() << "Forward port failed:" << process->getOutput();
-        QMessageBox::critical(this, "错误", "端口转发失败！\n" + process->getOutput());
-        close();
+        showError(tr("Error"),
+                  tr("Port forwarding failed!\n") + process->getOutput(),
+                  true);
     }
     process->deleteLater();
 }
@@ -192,374 +230,616 @@ void DeviceWindow::startServer()
     if (mServerProcess) {
         mServerProcess->deleteLater();
     }
-    mServerProcess = new AdbProcess(this);
-    connect(mServerProcess, &AdbProcess::finished, [this](int, QProcess::ExitStatus){
-        qDebug() << "ADB shell process finished (server likely stopped on device).";
-        if (this->isVisible()) {
-            ui->label_videoStream->setText("连接已断开");
-        }
-    });
 
-    // 从你的 ScrcpyOptions 生成参数
+    mServerProcess = new AdbProcess(this);
+
+    // OPTIMIZATION: Use QPointer in lambda to prevent accessing deleted object
+    QPointer<DeviceWindow> safeThis(this);
+    connect(mServerProcess.data(), &AdbProcess::finished,
+            [safeThis](int, QProcess::ExitStatus){
+                qDebug() << "[DeviceWindow] ADB shell process finished";
+                if (safeThis && safeThis->isVisible()) {
+                    safeThis->ui->label_videoStream->setText(safeThis->tr("Connection lost."));
+                }
+            });
+
     QStringList args = mOptions.toAdbShellArgs();
-    qDebug() << "Starting server with args:" << args.join(" ");
+    qDebug() << "[DeviceWindow] Starting server with args:" << args.join(" ");
     mServerProcess->execute(mSerial, args);
 }
 
-// 【新增】带重试的连接函数
 void DeviceWindow::connectToSocketWithRetry()
 {
-    if (mConnectionRetries >= 15) { // 最多重试15次 (约3秒)
-        qCritical() << "Failed to connect to socket after all retries.";
-        QMessageBox::critical(this, "连接失败", "无法连接到设备上的 scrcpy 服务。\n请检查设备是否已解锁或有权限弹窗。");
-        close();
+    if (mConnectionRetries >= DisplayConfig::MAX_CONNECTION_RETRIES) {
+        showError(tr("Connection Failed"),
+                  tr("Could not connect to the scrcpy service on the device after %1 attempts.\n"
+                     "Please check if the device is unlocked or has a permissions dialog.")
+                      .arg(DisplayConfig::MAX_CONNECTION_RETRIES),
+                  true);
         return;
     }
-    mConnectionRetries++;
-    qDebug() << "Connection attempt #" << mConnectionRetries;
 
+    mConnectionRetries++;
+    qDebug() << "[DeviceWindow] Connection attempt" << mConnectionRetries
+             << "of" << DisplayConfig::MAX_CONNECTION_RETRIES;
+
+    // Initialize decoder once
     if (!mDecoder) {
-        mDecoder = new VideoDecoderThread(mOptions.video_codec,this);
-        connect(mDecoder, &VideoDecoderThread::frameDecoded, this, &DeviceWindow::onFrameDecoded);
-        connect(mDecoder, &VideoDecoderThread::decodingFinished, this, &DeviceWindow::onDecodingFinished);
-        connect(mDecoder, &VideoDecoderThread::deviceNameReady, this, [this](const QString &name){
-            mDeviceName = name;
-            if (mOptions.window_title.isEmpty()) {
-                // 如果没有自定义标题，才使用默认的 "设备名 - 序列号" 格式
-                setWindowTitle(QString("%1 - %2").arg(name).arg(mSerial));
-            }
-            if(!mCurrentFrameSize.isEmpty()){
-                emit statusUpdated(mSerial,mDeviceName,mCurrentFrameSize);
-            }
-        });
+        mDecoder = new VideoDecoderThread(mOptions.video_codec, this);
+
+        connect(mDecoder.data(), &VideoDecoderThread::frameDecoded,
+                this, &DeviceWindow::onFrameDecoded,
+                Qt::QueuedConnection);
+
+        connect(mDecoder.data(), &VideoDecoderThread::decodingFinished,
+                this, &DeviceWindow::onDecodingFinished);
+
+        QPointer<DeviceWindow> safeThis(this);
+        connect(mDecoder.data(), &VideoDecoderThread::deviceNameReady,
+                [safeThis](const QString &name){
+                    if (!safeThis) return;
+
+                    safeThis->mDeviceName = name;
+                    if (safeThis->mOptions.window_title.isEmpty()) {
+                        safeThis->setWindowTitle(QString("%1 - %2").arg(name).arg(safeThis->mSerial));
+                    }
+                    if (!safeThis->mCurrentFrameSize.isEmpty()) {
+                        emit safeThis->statusUpdated(safeThis->mSerial, safeThis->mDeviceName,
+                                                     safeThis->mCurrentFrameSize);
+                    }
+                });
+
         mDecoder->start();
     }
 
+    // Create new socket for this attempt
     if (!mVideoSocket) {
         mVideoSocket = new QTcpSocket(this);
-        connect(mVideoSocket, &QTcpSocket::connected, this, &DeviceWindow::onSocketConnected);
-        connect(mVideoSocket, &QTcpSocket::disconnected, this, &DeviceWindow::onSocketDisconnected);
-        connect(mVideoSocket, &QTcpSocket::readyRead, this, &DeviceWindow::onSocketReadyRead);
 
-        // 【关键】当连接出错时，延迟后重试
-        connect(mVideoSocket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError) {
-            qWarning() << "Socket connection failed:" << mVideoSocket->errorString() << ". Retrying...";
-            mVideoSocket->deleteLater();
-            mVideoSocket = nullptr;
-            QTimer::singleShot(200, this, &DeviceWindow::connectToSocketWithRetry);
-        });
+        optimizeSocketForLowLatency(mVideoSocket.data());
+
+        connect(mVideoSocket.data(), &QTcpSocket::connected,
+                this, &DeviceWindow::onSocketConnected);
+        connect(mVideoSocket.data(), &QTcpSocket::disconnected,
+                this, &DeviceWindow::onSocketDisconnected);
+        connect(mVideoSocket.data(), &QTcpSocket::readyRead,
+                this, &DeviceWindow::onSocketReadyRead);
+
+        // FIXED: Use standard Qt::AutoConnection (default)
+        QPointer<DeviceWindow> safeThis(this);
+        connect(mVideoSocket.data(), &QTcpSocket::errorOccurred,
+                [safeThis](QAbstractSocket::SocketError error) {
+                    if (!safeThis || !safeThis->mVideoSocket) return;
+
+                    // Only log non-connection errors (connection refused is expected during retry)
+                    if (error != QAbstractSocket::ConnectionRefusedError) {
+                        qWarning() << "[DeviceWindow] Socket error:"
+                                   << safeThis->mVideoSocket->errorString();
+                    }
+
+                    // Clean up socket
+                    safeThis->mVideoSocket->deleteLater();
+                    safeThis->mVideoSocket.clear();
+
+                    // Retry after delay
+                    QTimer::singleShot(DisplayConfig::RETRY_DELAY_MS, safeThis,
+                                       &DeviceWindow::connectToSocketWithRetry);
+                });  //Removed Qt::SingleShotConnection
     }
-    mVideoSocket->connectToHost("localhost", mLocalPort);
+
+    // Use 127.0.0.1 for faster connection
+    mVideoSocket->connectToHost("127.0.0.1", mLocalPort);
 }
+
 
 void DeviceWindow::onSocketConnected()
 {
-    qDebug() << "Video socket connected! Handing over to decoder thread...";
-    ui->label_videoStream->setText("连接成功，等待设备元数据...");
-    mConnectionRetries = 0; // 成功后重置
-    // ============= 新增的核心逻辑 ==============
-    // 视频 Socket 成功后，立刻连接控制 Socket
-    qDebug() << "Now connecting control socket...";
+    qDebug() << "[DeviceWindow] Video socket connected successfully";
+    ui->label_videoStream->setText(tr("Connection successful, waiting for device metadata..."));
+    mConnectionRetries = 0;
+
+    // Connect control socket
+    qDebug() << "[DeviceWindow] Connecting control socket";
     if (!mControlSender) {
         mControlSender = new ControlSender(this);
-        connect(mControlSender, &ControlSender::controlSocketConnected, this, [](){
-            qDebug() << "[Control] Control socket connected successfully!";
-        });
-        connect(mControlSender, &ControlSender::controlSocketDisconnected, this, [](){
-            qDebug() << "[Control] Control socket disconnected.";
-        });
+
+        connect(mControlSender.data(), &ControlSender::controlSocketConnected,
+                [](){
+                    qDebug() << "[Control] Control socket connected";
+                });
+        connect(mControlSender.data(), &ControlSender::controlSocketDisconnected,
+                [](){
+                    qDebug() << "[Control] Control socket disconnected";
+                });
     }
-    mControlSender->connectToServer("localhost", mLocalPort);
-    // ==========================================
+    mControlSender->connectToServer("127.0.0.1", mLocalPort);
 }
 
 void DeviceWindow::onSocketReadyRead()
 {
-    if (mVideoSocket && mDecoder && mDecoder->isRunning()) {
-        QByteArray data = mVideoSocket->readAll();
-        if (!data.isEmpty()) {
-            QMetaObject::invokeMethod(mDecoder, "decodeData", Qt::QueuedConnection, Q_ARG(QByteArray, data));
-        }
+    if (!mVideoSocket || !mDecoder) return;
+
+    // OPTIMIZATION: Read ALL available data at once (reduces system calls)
+    qint64 available = mVideoSocket->bytesAvailable();
+    if (available <= 0) return;
+
+    // Read in optimal chunks to reduce overhead
+    static constexpr qint64 MAX_READ_SIZE = 65536; // 64KB chunks
+
+    while (mVideoSocket->bytesAvailable() > 0) {
+        qint64 toRead = qMin(mVideoSocket->bytesAvailable(), MAX_READ_SIZE);
+        QByteArray data = mVideoSocket->read(toRead);
+
+        if (data.isEmpty()) break;
+
+        // Queue data to decoder thread (already thread-safe via Qt::QueuedConnection)
+        QMetaObject::invokeMethod(mDecoder.data(), "decodeData",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(QByteArray, data));
     }
 }
+
+
+void DeviceWindow::updateCoordinateTransform()
+{
+    if (mCurrentFrameSize.isEmpty()) {
+        mTransform.isValid = false;
+        qDebug() << "[DeviceWindow] Transform invalid - no frame size";
+        return;
+    }
+
+    QSize labelSize = ui->label_videoStream->size();
+    if (labelSize.isEmpty() || labelSize.width() < 10 || labelSize.height() < 10) {
+        mTransform.isValid = false;
+        qDebug() << "[DeviceWindow] Transform invalid - label not ready:" << labelSize;
+        return;
+    }
+
+    // Calculate how the video fits in the label (keeping aspect ratio)
+    QSize videoSize = mCurrentFrameSize;
+    videoSize.scale(labelSize, Qt::KeepAspectRatio);
+
+
+    if (videoSize.width() <= 0 || videoSize.height() <= 0) {
+        mTransform.isValid = false;
+        qDebug() << "[DeviceWindow] Transform invalid - zero videoSize";
+        return;
+    }
+
+    // Calculate letterboxing/pillarboxing margins
+    mTransform.videoSize = videoSize;
+    mTransform.marginX = (labelSize.width() - videoSize.width()) / 2;
+    mTransform.marginY = (labelSize.height() - videoSize.height()) / 2;
+
+    // Calculate scaling factors
+    mTransform.scaleX = static_cast<double>(mCurrentFrameSize.width()) / videoSize.width();
+    mTransform.scaleY = static_cast<double>(mCurrentFrameSize.height()) / videoSize.height();
+    mTransform.isValid = true;
+
+    qDebug() << "[DeviceWindow] Transform updated:"
+             << "Label:" << labelSize
+             << "Video:" << videoSize
+             << "Device:" << mCurrentFrameSize
+             << "Scale:" << QString("%1x%2").arg(mTransform.scaleX, 0, 'f', 2).arg(mTransform.scaleY, 0, 'f', 2)
+             << "Margins:" << mTransform.marginX << "," << mTransform.marginY;
+}
+
+
 
 void DeviceWindow::onFrameDecoded(const QImage &frame)
 {
-    if (ui->label_videoStream->text().isEmpty() == false) {
-        ui->label_videoStream->clear();
+#ifdef QT_DEBUG
+    // FPS counter for performance monitoring
+    mFrameCount++;
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (now - mLastFpsTime >= 1000) {
+        qDebug() << "[DeviceWindow] FPS:" << mFrameCount;
+        mFrameCount = 0;
+        mLastFpsTime = now;
     }
+#endif
+
+    if (frame.isNull()) {
+        qWarning() << "[DeviceWindow] Received null frame";
+        return;
+    }
+
     QSize newFrameSize = frame.size();
-    if (!newFrameSize.isEmpty() && newFrameSize != mCurrentFrameSize) {
+
+
+    bool resolutionChanged = !newFrameSize.isEmpty() && newFrameSize != mCurrentFrameSize;
+
+    if (resolutionChanged) {
+        qDebug() << "[DeviceWindow] Resolution change detected:"
+                 << mCurrentFrameSize << "->" << newFrameSize;
+
         mCurrentFrameSize = newFrameSize;
+
+        // Emit status update
         if (!mDeviceName.isEmpty()) {
             emit statusUpdated(mSerial, mDeviceName, mCurrentFrameSize);
         }
-        qDebug() << "Frame size changed to:" << newFrameSize << ". Adjusting window size...";
-        QSize videoDisplaySize;
+
+
+        QSize windowSize;
         double aspectRatio = static_cast<double>(newFrameSize.width()) / newFrameSize.height();
-        if (aspectRatio < 1.0) { // 竖屏
-            videoDisplaySize.setHeight(BASE_HEIGHT_PORTRAIT);
-            videoDisplaySize.setWidth(qRound(BASE_HEIGHT_PORTRAIT * aspectRatio));
-        } else { // 横屏
-            videoDisplaySize.setWidth(BASE_WIDTH_LANDSCAPE);
-            videoDisplaySize.setHeight(qRound(BASE_WIDTH_LANDSCAPE / aspectRatio));
+
+        if (aspectRatio < 1.0) { // Portrait mode
+            int targetHeight = DisplayConfig::BASE_HEIGHT_PORTRAIT;
+            int targetWidth = qRound(targetHeight * aspectRatio);
+            windowSize = QSize(targetWidth, targetHeight);
+            qDebug() << "[DeviceWindow] Portrait mode - Window size:" << windowSize;
+        } else { // Landscape mode
+            int targetWidth = DisplayConfig::BASE_WIDTH_LANDSCAPE;
+            int targetHeight = qRound(targetWidth / aspectRatio);
+            windowSize = QSize(targetWidth, targetHeight);
+            qDebug() << "[DeviceWindow] Landscape mode - Window size:" << windowSize;
         }
 
-        ui->label_videoStream->setMinimumSize(videoDisplaySize);
-        ui->label_videoStream->setMaximumSize(videoDisplaySize);
 
-        this->adjustSize();
-        ui->label_videoStream->setMinimumSize(0, 0);
-        ui->label_videoStream->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-        // UI刷新时序修复：放弃这一帧，等待下一帧在尺寸正确的窗口中绘制
-        return;
+        ui->label_videoStream->setFixedSize(windowSize);
+        adjustSize();
+
+
+        QPointer<DeviceWindow> safeThis(this);
+        QTimer::singleShot(100, this, [safeThis, windowSize]() {
+            if (!safeThis) return;
+
+            // Allow resizing but set minimum size
+            safeThis->ui->label_videoStream->setMinimumSize(windowSize / 2);
+            safeThis->ui->label_videoStream->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+
+
+            safeThis->updateCoordinateTransform();
+
+            qDebug() << "[DeviceWindow] Window setup complete, ready for interaction";
+        });
+
+        // Configure scaling on first frame
+        if (mFirstFrame) {
+            ui->label_videoStream->setScaledContents(true);
+            mFirstFrame = false;
+        }
     }
-    // 窗口尺寸正确，直接更新图像
-    ui->label_videoStream->setPixmap(QPixmap::fromImage(frame).scaled(
-        ui->label_videoStream->size(),
-        Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-        ));
+
+
+    ui->label_videoStream->setPixmap(QPixmap::fromImage(frame));
 }
+
+
 
 void DeviceWindow::onDecodingFinished(const QString &message)
 {
-    qDebug() << "From DecoderThread:" << message;
-    if (message.contains("错误") && this->isVisible()) {
-        QMessageBox::warning(this, "解码错误", message);
+    qDebug() << "[DeviceWindow] Decoder:" << message;
+
+    if (message.contains("Error", Qt::CaseInsensitive) && isVisible()) {
+        QMessageBox::warning(this, tr("Decoding Error"), message);
     }
 }
 
 void DeviceWindow::onSocketError(QAbstractSocket::SocketError socketError)
 {
-    // 这个函数现在只处理“连接成功后”发生的错误
-    if (mVideoSocket && mVideoSocket->state() != QAbstractSocket::ConnectingState && this->isVisible()) {
-        QMessageBox::critical(this, "网络错误", "Socket 连接中断: " + mVideoSocket->errorString());
-        close();
+    // Only handle errors after successful connection
+    // Connection-time errors are handled by retry logic
+    if (mVideoSocket &&
+        mVideoSocket->state() != QAbstractSocket::ConnectingState &&
+        isVisible()) {
+        showError(tr("Network Error"),
+                  tr("Socket connection interrupted: ") + mVideoSocket->errorString(),
+                  true);
     }
 }
 
 void DeviceWindow::onSocketDisconnected()
 {
-    qDebug() << "Socket disconnected.";
-    if (this->isVisible()) {
-        ui->label_videoStream->setText("连接已断开");
+    qDebug() << "[DeviceWindow] Socket disconnected";
+    if (isVisible()) {
+        ui->label_videoStream->setText(tr("Connection lost."));
     }
 }
-
 
 void DeviceWindow::stopAll()
 {
-    qDebug() << "Stopping all services for" << mSerial;
+    qDebug() << "[DeviceWindow] Stopping all services for" << mSerial;
+
+    // Stop decoder thread (non-blocking)
     if (mDecoder) {
         mDecoder->stop();
         mDecoder->quit();
-        mDecoder->wait(2000);
-        mDecoder->deleteLater();
-        mDecoder = nullptr;
+
+        // OPTIMIZATION: Don't block UI thread with wait()
+        QPointer<VideoDecoderThread> decoder = mDecoder;
+        QTimer::singleShot(0, [decoder]() {
+            if (!decoder) return;
+
+            if (decoder->wait(DisplayConfig::DECODER_STOP_TIMEOUT_MS)) {
+                qDebug() << "[DeviceWindow] Decoder stopped gracefully";
+            } else {
+                qWarning() << "[DeviceWindow] Decoder timeout, terminating";
+                decoder->terminate();
+                decoder->wait(1000);
+            }
+            decoder->deleteLater();
+        });
+
+        mDecoder.clear();
     }
+
+    // Close video socket
     if (mVideoSocket) {
         mVideoSocket->close();
         mVideoSocket->deleteLater();
-        mVideoSocket = nullptr;
+        mVideoSocket.clear();
     }
+
+    // Stop server process
     if (mServerProcess) {
         mServerProcess->terminate();
-        mServerProcess->waitForFinished(1000);
+        if (!mServerProcess->waitForFinished(DisplayConfig::SERVER_PROCESS_TIMEOUT_MS)) {
+            mServerProcess->kill();
+        }
         mServerProcess->deleteLater();
-        mServerProcess = nullptr;
+        mServerProcess.clear();
     }
+
+    // Disconnect control sender
     if (mControlSender) {
         mControlSender->disconnectFromServer();
         mControlSender->deleteLater();
-        mControlSender = nullptr;
+        mControlSender.clear();
     }
-    AdbProcess *removeForwardProcess = new AdbProcess(this);
-    connect(removeForwardProcess, &AdbProcess::finished, removeForwardProcess, &QObject::deleteLater);
-    removeForwardProcess->execute(mSerial, {"forward", "--remove", QString("tcp:%1").arg(mLocalPort)});
-    qDebug() << "Cleanup commands sent for" << mSerial;
+
+    // Remove port forwarding
+    AdbProcess *removeForwardProcess = new AdbProcess();
+    connect(removeForwardProcess, &AdbProcess::finished,
+            removeForwardProcess, &QObject::deleteLater);
+    removeForwardProcess->execute(mSerial, {"forward", "--remove",
+                                            QString("tcp:%1").arg(mLocalPort)});
 }
 
-
-// 坐标转换辅助函数
 QPoint DeviceWindow::mapMousePosition(const QPoint &pos)
 {
-    if (mCurrentFrameSize.isEmpty()) {
-        return QPoint(); // 无效
+
+    if (!mTransform.isValid || mCurrentFrameSize.isEmpty()) {
+        qDebug() << "[DeviceWindow] Mouse mapping failed - transform not ready or no frame size";
+        return QPoint();
     }
 
-    // 计算视频在 QLabel 中的实际显示区域
-    QSize labelSize = ui->label_videoStream->size();
-    QSize videoSize = mCurrentFrameSize;
-    videoSize.scale(labelSize, Qt::KeepAspectRatio);
-    int marginX = (labelSize.width() - videoSize.width()) / 2;
-    int marginY = (labelSize.height() - videoSize.height()) / 2;
+    // Calculate position relative to video area (excluding margins)
+    int videoX = pos.x() - mTransform.marginX;
+    int videoY = pos.y() - mTransform.marginY;
 
-    // 从 QLabel 坐标转换到视频内的相对坐标
-    int videoX = pos.x() - marginX;
-    int videoY = pos.y() - marginY;
-
-    // 检查是否在视频区域内
-    if (videoX < 0 || videoY < 0 || videoX > videoSize.width() || videoY > videoSize.height()) {
-        return QPoint(); // 点击在黑边上，无效
+    // Check if click is within video area
+    if (videoX < 0 || videoY < 0 ||
+        videoX >= mTransform.videoSize.width() ||
+        videoY >= mTransform.videoSize.height()) {
+        // Click is on letterbox/pillarbox area
+        return QPoint();
     }
-    // 将视频内的相对坐标映射到手机的真实分辨率坐标
-    int phoneX = videoX * mCurrentFrameSize.width() / videoSize.width();
-    int phoneY = videoY * mCurrentFrameSize.height() / videoSize.height();
 
-    return QPoint(phoneX, phoneY);
+    // Map to device coordinates
+    int deviceX = qRound(videoX * mTransform.scaleX);
+    int deviceY = qRound(videoY * mTransform.scaleY);
+
+
+    deviceX = qBound(0, deviceX, mCurrentFrameSize.width() - 1);
+    deviceY = qBound(0, deviceY, mCurrentFrameSize.height() - 1);
+
+    return QPoint(deviceX, deviceY);
 }
+
+
+
 void DeviceWindow::mousePressEvent(QMouseEvent *event)
 {
-    if (mControlSender && event->button() == Qt::LeftButton) {
-        // --- 核心修改：坐标转换 ---
-        // 1. 将窗口坐标 event->pos() 映射到 QLabel 的坐标系中
-        QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
-        // 2. 使用 QLabel 的局部坐标进行后续计算
-        QPoint devicePos = mapMousePosition(labelPos);
-        // --- 修改结束 ---
-        if (!devicePos.isNull()) {
-            qDebug() << "Mouse Press at device coords:" << devicePos;
-            mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_DOWN, devicePos, mCurrentFrameSize);
-            mIsMousePressed = true;
-        }
+
+    if (!mControlSender || event->button() != Qt::LeftButton) {
+        return;
+    }
+    QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
+    QPoint devicePos = mapMousePosition(labelPos);
+    if (!devicePos.isNull()) {
+        qDebug() << "[DeviceWindow] Mouse press:"
+                 << "Global:" << event->globalPos()
+                 << "Label:" << labelPos
+                 << "Device:" << devicePos;
+
+        mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_DOWN, devicePos, mCurrentFrameSize);
+        mIsMousePressed = true;
+    } else {
+        qDebug() << "[DeviceWindow] Mouse press ignored (outside video area or invalid transform)";
     }
 }
+
+
 void DeviceWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (mControlSender && event->button() == Qt::LeftButton) {
-        // --- 核心修改：坐标转换 ---
-        QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
-        QPoint devicePos = mapMousePosition(labelPos);
-        // --- 修改结束 ---
-        if (!devicePos.isNull()) {
-            qDebug() << "Mouse Release at device coords:" << devicePos;
-            mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_UP, devicePos, mCurrentFrameSize);
-        }
-        mIsMousePressed = false;
+
+    if (!mControlSender || event->button() != Qt::LeftButton) {
+        return;
     }
+    QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
+    QPoint devicePos = mapMousePosition(labelPos);
+    if (!devicePos.isNull()) {
+        qDebug() << "[DeviceWindow] Mouse release at device coords:" << devicePos;
+        mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_UP, devicePos, mCurrentFrameSize);
+    }
+    mIsMousePressed = false;
 }
+
 void DeviceWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    if (mControlSender && mIsMousePressed) {
-        // --- 核心修改：坐标转换 ---
-        QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
-        QPoint devicePos = mapMousePosition(labelPos);
-        // --- 修改结束 ---
 
-        if (!devicePos.isNull()) {
-            mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_MOVE, devicePos, mCurrentFrameSize);
-        }
+    if (!mControlSender || !mIsMousePressed) {
+        return;
+    }
+    QPoint labelPos = ui->label_videoStream->mapFromGlobal(event->globalPos());
+    QPoint devicePos = mapMousePosition(labelPos);
+    if (!devicePos.isNull()) {
+        mControlSender->postInjectTouch(AMOTION_EVENT_ACTION_MOVE, devicePos, mCurrentFrameSize);
     }
 }
+
+void DeviceWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+}
+
+
 void DeviceWindow::keyPressEvent(QKeyEvent *event)
 {
-    if(mControlSender) {
-        int androidKey = qtKeyToAndroidKey(event->key());
-        if (androidKey != AKEYCODE_UNKNOWN) {
-            mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, androidKey, qtModifiersToAndroidMetaState(event->modifiers()));
-        }
-        // 同时发送文本，这样输入法才能正常工作
-        if (!event->text().isEmpty()) {
-            mControlSender->postInjectText(event->text());
-        }
+    if (!mControlSender) return;
+
+    int androidKey = qtKeyToAndroidKey(event->key());
+    if (androidKey != AKEYCODE_UNKNOWN) {
+        mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, androidKey,
+                                          qtModifiersToAndroidMetaState(event->modifiers()));
+    }
+
+    // Send text event for software keyboard support
+    if (!event->text().isEmpty()) {
+        mControlSender->postInjectText(event->text());
     }
 }
+
 void DeviceWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    if (mControlSender) {
-        int androidKey = qtKeyToAndroidKey(event->key());
-        if (androidKey != AKEYCODE_UNKNOWN) {
-            mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, androidKey, qtModifiersToAndroidMetaState(event->modifiers()));
-        }
+    if (!mControlSender) return;
+
+    int androidKey = qtKeyToAndroidKey(event->key());
+    if (androidKey != AKEYCODE_UNKNOWN) {
+        mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, androidKey,
+                                          qtModifiersToAndroidMetaState(event->modifiers()));
     }
 }
-// ========== 新增：工具栏按钮槽函数实现 ==========
+
 void DeviceWindow::setupToolbarActions()
 {
-    // connect(ui->action_power, &QAction::triggered, this, &DeviceWindow::on_action_power_triggered);
-    // connect(ui->action_volumeUp, &QAction::triggered, this, &DeviceWindow::on_action_volumeUp_triggered);
-    // connect(ui->action_volumeDown, &QAction::triggered, this, &DeviceWindow::on_action_volumeDown_triggered);
-    // connect(ui->action_rotateDevice, &QAction::triggered, this, &DeviceWindow::on_action_rotateDevice_triggered);
-    // connect(ui->action_home, &QAction::triggered, this, &DeviceWindow::on_action_home_triggered);
-    // connect(ui->action_back, &QAction::triggered, this, &DeviceWindow::on_action_back_triggered);
-    // connect(ui->action_appSwitch, &QAction::triggered, this, &DeviceWindow::on_action_appSwitch_triggered);
-    // connect(ui->action_menu, &QAction::triggered, this, &DeviceWindow::on_action_menu_triggered);
-    // connect(ui->action_expandNotifications, &QAction::triggered, this, &DeviceWindow::on_action_expandNotifications_triggered);
-    // connect(ui->action_collapseNotifications, &QAction::triggered, this, &DeviceWindow::on_action_collapseNotifications_triggered);
-    // connect(ui->action_screenshot, &QAction::triggered, this, &DeviceWindow::on_action_screenshot_triggered);
+    // Auto-connected by Qt's naming convention
 }
+
+// --- Toolbar Action Handlers ---
+
 void DeviceWindow::on_action_power_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_POWER);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_POWER);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_POWER);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_POWER);
 }
+
 void DeviceWindow::on_action_volumeUp_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_VOLUME_UP);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_VOLUME_UP);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_VOLUME_UP);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_VOLUME_UP);
 }
+
 void DeviceWindow::on_action_volumeDown_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_VOLUME_DOWN);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_VOLUME_DOWN);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_VOLUME_DOWN);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_VOLUME_DOWN);
 }
-void DeviceWindow::on_action_rotateDevice_triggered()
-{
-    if (mControlSender) mControlSender->postRotateDevice();
-}
+
+
 void DeviceWindow::on_action_home_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_HOME);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_HOME);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_HOME);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_HOME);
 }
+
 void DeviceWindow::on_action_back_triggered()
 {
-    if (mControlSender) {
-        mControlSender->postBackOrScreenOn(AKEY_EVENT_ACTION_DOWN);
-        mControlSender->postBackOrScreenOn(AKEY_EVENT_ACTION_UP);
-    }
+    if (!mControlSender) return;
+    mControlSender->postBackOrScreenOn(AKEY_EVENT_ACTION_DOWN);
+    mControlSender->postBackOrScreenOn(AKEY_EVENT_ACTION_UP);
 }
+
 void DeviceWindow::on_action_appSwitch_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_APP_SWITCH);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_APP_SWITCH);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_APP_SWITCH);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_APP_SWITCH);
 }
+
 void DeviceWindow::on_action_menu_triggered()
 {
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_MENU);
-    if (mControlSender) mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_MENU);
+    if (!mControlSender) return;
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_DOWN, AKEYCODE_MENU);
+    mControlSender->postInjectKeycode(AKEY_EVENT_ACTION_UP, AKEYCODE_MENU);
 }
+
 void DeviceWindow::on_action_expandNotifications_triggered()
 {
-    if (mControlSender) mControlSender->postExpandNotificationPanel();
+    if (mControlSender) {
+        mControlSender->postExpandNotificationPanel();
+    }
 }
+
 void DeviceWindow::on_action_collapseNotifications_triggered()
 {
-    if (mControlSender) mControlSender->postCollapseNotificationPanel();
+    if (mControlSender) {
+        mControlSender->postCollapseNotificationPanel();
+    }
 }
+
 void DeviceWindow::on_action_screenshot_triggered()
 {
     if (mCurrentFrameSize.isEmpty()) return;
+
     QPixmap screenshot = ui->label_videoStream->pixmap(Qt::ReturnByValue);
     if (screenshot.isNull()) return;
+
     QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
     QString fileName = QString("Screenshot_%1_%2.png")
                            .arg(mSerial)
                            .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
-    QString savePath = QFileDialog::getSaveFileName(this, "保存截图",
-                                                    QDir(defaultPath).filePath(fileName),
-                                                    "PNG Images (*.png)");
+
+    QString savePath = QFileDialog::getSaveFileName(
+        this,
+        tr("Save Screenshot"),
+        QDir(defaultPath).filePath(fileName),
+        tr("PNG Images (*.png)")
+        );
+
     if (!savePath.isEmpty()) {
         if (screenshot.save(savePath, "PNG")) {
-            qDebug() << "Screenshot saved to" << savePath;
+            qDebug() << "[DeviceWindow] Screenshot saved to" << savePath;
         } else {
-            QMessageBox::warning(this, "保存失败", "无法将截图保存到指定位置。");
+            QMessageBox::warning(this, tr("Save Failed"),
+                                 tr("Could not save the screenshot to the specified location."));
         }
     }
+
 }
 
-int DeviceWindow::qtKeyToAndroidKey(int qtKey) {
+void DeviceWindow::optimizeSocketForLowLatency(QTcpSocket* socket)
+{
+    if (!socket) return;
+
+    // CRITICAL: Disable Nagle's algorithm (reduces latency by 40-200ms!)
+    socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+
+    // Disable buffering for immediate delivery
+    socket->setSocketOption(QAbstractSocket::KeepAliveOption, 0);
+
+    // Set optimal buffer sizes (larger = more throughput, but we want low latency)
+    // For USB connections, smaller buffers = lower latency
+    socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 32768);   // 32KB
+    socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 65536); // 64KB
+
+    // For Wi-Fi, you might want larger buffers:
+    // socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 131072); // 128KB
+
+    qDebug() << "[DeviceWindow] Socket optimized for low latency";
+}
+
+
+// --- Key Mapping Helpers ---
+
+int DeviceWindow::qtKeyToAndroidKey(int qtKey)
+{
     switch (qtKey) {
     case Qt::Key_Home:          return AKEYCODE_HOME;
     case Qt::Key_Escape:        return AKEYCODE_BACK;
@@ -599,11 +879,12 @@ int DeviceWindow::qtKeyToAndroidKey(int qtKey) {
     case Qt::Key_X:             return AKEYCODE_X;
     case Qt::Key_Y:             return AKEYCODE_Y;
     case Qt::Key_Z:             return AKEYCODE_Z;
-    // ... 添加更多映射
     default:                    return AKEYCODE_UNKNOWN;
     }
 }
-int DeviceWindow::qtModifiersToAndroidMetaState(Qt::KeyboardModifiers modifiers) {
+
+int DeviceWindow::qtModifiersToAndroidMetaState(Qt::KeyboardModifiers modifiers)
+{
     int metaState = 0;
     if (modifiers & Qt::ShiftModifier) {
         metaState |= AMETA_SHIFT_ON;
