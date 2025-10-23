@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assert/title.ico</file>
+    </qresource>
+</RCC>

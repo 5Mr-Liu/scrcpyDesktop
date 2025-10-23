@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon(":/assert/title.ico"));
 
     // --- Connect buttons from the left panel and log panel ---
     connect(ui->btn_connectUSB,     &QPushButton::clicked, this, &MainWindow::handleConnectUsbClick);

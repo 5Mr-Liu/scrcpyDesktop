@@ -43,18 +43,18 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 # ===================================================================
 # FFmpeg Integration
 # ===================================================================
-# 设置 FFmpeg 开发库的根目录
-# $$PWD 表示当前 .pro 文件所在的目录
 FFMPEG_PATH = $$PWD/3rdparty/ffmpeg
-# 1. 添加头文件搜索路径
 INCLUDEPATH += $$FFMPEG_PATH/include
-# 2. 添加库文件搜索路径和要链接的库
-# -L 告诉链接器去哪里找库文件
-# -l 指定具体要链接哪个库 (去掉前缀 lib 和后缀 .a 或 .lib)
-# 这个配置适用于 MinGW (g++) 编译器
 LIBS += -L$$FFMPEG_PATH/lib \
         -lavformat \
         -lavcodec \
         -lavutil \
         -lswscale \
         -lswresample
+
+RESOURCES += \
+    resources.qrc
+
+win32 {
+    RC_FILE = app.rc
+}

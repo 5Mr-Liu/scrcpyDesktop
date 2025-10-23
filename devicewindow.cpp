@@ -24,6 +24,7 @@ DeviceWindow::DeviceWindow(const QString &serial, const ScrcpyOptions &options, 
     mCurrentFrameSize(0, 0)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon(":/assert/title.ico"));
 
     // Apply window settings
     if (!mOptions.window_title.isEmpty()) {
