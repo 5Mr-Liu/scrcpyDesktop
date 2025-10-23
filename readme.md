@@ -72,7 +72,7 @@ If you wish to compile the project yourself, please ensure the following depende
 
 This project requires the `scrcpy-server` file to run the service on the Android device.
 1.  Go to the [Scrcpy Releases](https://github.com/Genymobile/scrcpy/releases) page.
-2.  Download a compatible `scrcpy-server` file (e.g., **v2.4**).
+2.  Download a compatible `scrcpy-server` file (e.g., **v3.3.3**).
 3.  **Rename** the downloaded file to `scrcpy-server` and place it **next to the application's final executable**.
 
 #### 3. Compilation Steps
