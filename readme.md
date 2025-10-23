@@ -5,24 +5,10 @@
 [![Qt Version](https://img.shields.io/badge/Qt-6.x%2B-green.svg)]()
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 
-<div align="center">
-
 **[English](./README.md) | 中文**
 
-</div>
+<img  alt="Image" src="https://private-user-images.githubusercontent.com/98318399/504505816-99de7346-5355-4d77-a280-7299680513a1.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjExODk0ODMsIm5iZiI6MTc2MTE4OTE4MywicGF0aCI6Ii85ODMxODM5OS81MDQ1MDU4MTYtOTlkZTczNDYtNTM1NS00ZDc3LWEyODAtNzI5OTY4MDUxM2ExLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTEwMjMlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUxMDIzVDAzMTMwM1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTQxYzkzOWY0YWM1MGNlYjI4NzM5ZDRkN2NkMTg0YzIxOGFlYTVlZjIzYjY0MTQ5Nzk0OWI5NjI4Y2MzYWIwOWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.SMYFG2p4NPXH3lalnGexfUptyzGXJHL8ADUf0lqa9QM"/>
 
----
-
-<!-- 
-    重要提示：
-    请在这里放一张你程序的截图！一张好的截图胜过千言万语。
--->
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/10924336/206891129-9f792693-41f8-403d-82c5-7a09169f471e.png" alt="Application Screenshot" width="800"/>
-</p>
-<p align="center">
-  <em>(这是一个示例截图，请替换为你自己的)</em>
-</p>
 **Scrcpy Desktop** 是一个基于 [scrcpy](https://github.com/Genymobile/scrcpy) 构建的功能强大的桌面图形界面客户端。它使用 C++ 和 Qt 框架开发，旨在提供一个直观、高效的方式来同时管理和控制多个安卓设备。
 
 本项目是一个独立的图形界面客户端，其核心镜像与控制功能完全依赖于杰出的开源项目 [**scrcpy**](https://github.com/Genymobile/scrcpy)，由 [Genymobile](https://www.genymobile.com/) 开发。我们对 Genymobile 团队创造出如此优秀和高性能的工具表示由衷的感谢！
@@ -39,7 +25,6 @@
     - [3. 编译步骤](#3-编译步骤)
 - [🚀 如何使用](#-如何使用)
 - [🏗️ 项目架构](#️-项目架构)
-- [🤝 如何贡献](#-如何贡献)
 - [📄 许可证](#-许可证)
 - [🙏 致谢](#-致谢)
 
@@ -141,18 +126,6 @@
 -   `VideoDecoderThread`: 一个专用的 `QThread`，使用 FFmpeg 库来高效地解码从设备接收到的视频流，确保 UI 的流畅性。
 -   `ControlSender`: 负责将鼠标和键盘的输入事件序列化为 scrcpy 协议格式，并通过一个独立的 TCP 套接字发送到设备。
 -   `UiStateManager`: 管理主窗口 UI 控件之间的联动逻辑（例如，选中 "禁用视频" 时，自动禁用所有视频相关选项）。
-
-*(这是一个示例图，你可以创建一个简单的图来表示类之间的关系)*
-
-## 🤝 如何贡献
-
-我们欢迎任何形式的贡献！如果你有任何想法、建议或发现了 Bug，请随时提交 Issue。如果你想贡献代码，请遵循以下步骤：
-
-1.  Fork 本仓库。
-2.  创建一个新的分支 (`git checkout -b feature/YourFeature` 或 `bugfix/YourBug`)。
-3.  提交你的代码更改 (`git commit -m 'Add some feature'`)。
-4.  将你的分支推送到你的 Fork (`git push origin feature/YourFeature`)。
-5.  创建一个 Pull Request。
 
 ## 📄 许可证
 
