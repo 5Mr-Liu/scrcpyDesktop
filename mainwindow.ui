@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Scrcpy 多设备控制器 - Multi-Device Manager</string>
+   <string>Scrcpy Multi-Device Manager</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_main">
@@ -64,7 +64,7 @@
         <item>
          <widget class="QGroupBox" name="groupBox_connectionType">
           <property name="title">
-           <string>连接方式</string>
+           <string>Connection Type</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_connectionType">
            <item>
@@ -74,7 +74,7 @@
              </property>
              <widget class="QWidget" name="tab_usb">
               <attribute name="title">
-               <string>USB 连接</string>
+               <string>USB Connection</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_usb">
                <item>
@@ -82,10 +82,10 @@
                  <item>
                   <widget class="QPushButton" name="btn_refreshUSB">
                    <property name="toolTip">
-                    <string>扫描通过 USB 连接的设备 (adb devices)</string>
+                    <string>Scan for devices connected via USB (adb devices)</string>
                    </property>
                    <property name="text">
-                    <string>刷新 USB 设备</string>
+                    <string>Refresh USB Devices</string>
                    </property>
                    <property name="icon">
                     <iconset theme="view-refresh"/>
@@ -95,10 +95,10 @@
                  <item>
                   <widget class="QCheckBox" name="checkBox_selectUSB">
                    <property name="toolTip">
-                    <string>--select-usb: 仅选择 USB 设备</string>
+                    <string>--select-usb: Select USB devices only</string>
                    </property>
                    <property name="text">
-                    <string>仅 USB (-d)</string>
+                    <string>USB Only (-d)</string>
                    </property>
                   </widget>
                  </item>
@@ -113,7 +113,7 @@
                   </size>
                  </property>
                  <property name="toolTip">
-                  <string>USB 连接的设备列表</string>
+                  <string>List of USB connected devices</string>
                  </property>
                  <property name="alternatingRowColors">
                   <bool>true</bool>
@@ -131,17 +131,17 @@
                     <string>QPushButton { background-color: #4CAF50; color: white; padding: 6px; }</string>
                    </property>
                    <property name="text">
-                    <string>连接选中</string>
+                    <string>Connect Selected</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_enableTCPIP">
                    <property name="toolTip">
-                    <string>--tcpip: 为选中设备启用无线连接</string>
+                    <string>--tcpip: Enable wireless connection for selected device</string>
                    </property>
                    <property name="text">
-                    <string>启用 TCP/IP</string>
+                    <string>Enable TCP/IP</string>
                    </property>
                   </widget>
                  </item>
@@ -151,7 +151,7 @@
              </widget>
              <widget class="QWidget" name="tab_wifi">
               <attribute name="title">
-               <string>WiFi 连接</string>
+               <string>WiFi Connection</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_wifi">
                <item>
@@ -159,31 +159,31 @@
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_ipAddress">
                    <property name="text">
-                    <string>设备 IP 地址:</string>
+                    <string>Device IP Address:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="1">
                   <widget class="QLineEdit" name="lineEdit_ipAddress">
                    <property name="toolTip">
-                    <string>设备的 IP 地址</string>
+                    <string>IP address of the device</string>
                    </property>
                    <property name="placeholderText">
-                    <string>例如: 192.168.1.100</string>
+                    <string>e.g., 192.168.1.100</string>
                    </property>
                   </widget>
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="label_tcpPort">
                    <property name="text">
-                    <string>端口:</string>
+                    <string>Port:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="1" column="1">
                   <widget class="QSpinBox" name="spinBox_tcpPort">
                    <property name="toolTip">
-                    <string>TCP/IP 端口 (默认: 5555)</string>
+                    <string>TCP/IP Port (default: 5555)</string>
                    </property>
                    <property name="minimum">
                     <number>1</number>
@@ -203,7 +203,7 @@
                  <item>
                   <widget class="QPushButton" name="btn_addWiFiDevice">
                    <property name="text">
-                    <string>添加设备</string>
+                    <string>Add Device</string>
                    </property>
                    <property name="icon">
                     <iconset theme="list-add"/>
@@ -213,10 +213,10 @@
                  <item>
                   <widget class="QCheckBox" name="checkBox_forceReconnect">
                    <property name="toolTip">
-                    <string>--tcpip=+ip:port: 强制断开并重新连接</string>
+                    <string>--tcpip=+ip:port: Force disconnect and reconnect</string>
                    </property>
                    <property name="text">
-                    <string>强制重连 (+)</string>
+                    <string>Force Reconnect (+)</string>
                    </property>
                   </widget>
                  </item>
@@ -231,7 +231,7 @@
                   </size>
                  </property>
                  <property name="toolTip">
-                  <string>WiFi 连接的设备列表</string>
+                  <string>List of WiFi connected devices</string>
                  </property>
                  <property name="alternatingRowColors">
                   <bool>true</bool>
@@ -249,14 +249,14 @@
                     <string>QPushButton { background-color: #4CAF50; color: white; padding: 6px; }</string>
                    </property>
                    <property name="text">
-                    <string>连接选中</string>
+                    <string>Connect Selected</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_removeWiFi">
                    <property name="text">
-                    <string>移除</string>
+                    <string>Remove</string>
                    </property>
                    <property name="icon">
                     <iconset theme="list-remove"/>
@@ -268,10 +268,10 @@
                <item>
                 <widget class="QCheckBox" name="checkBox_selectTCPIP">
                  <property name="toolTip">
-                  <string>仅选择通过 TCP/IP 连接的设备</string>
+                  <string>Select only devices connected via TCP/IP</string>
                  </property>
                  <property name="text">
-                  <string>仅 TCP/IP 设备 (-e, --select-tcpip)</string>
+                  <string>TCP/IP Only (-e, --select-tcpip)</string>
                  </property>
                 </widget>
                </item>
@@ -279,13 +279,13 @@
              </widget>
              <widget class="QWidget" name="tab_serial">
               <attribute name="title">
-               <string>序列号</string>
+               <string>Serial Number</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_serial">
                <item>
                 <widget class="QLabel" name="label_serialInfo">
                  <property name="text">
-                  <string>通过设备序列号直接连接</string>
+                  <string>Connect directly via device serial number</string>
                  </property>
                  <property name="wordWrap">
                   <bool>true</bool>
@@ -297,17 +297,17 @@
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_serial">
                    <property name="text">
-                    <string>序列号:</string>
+                    <string>Serial Number:</string>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="1">
                   <widget class="QLineEdit" name="lineEdit_serial">
                    <property name="toolTip">
-                    <string>-s, --serial: 设备序列号</string>
+                    <string>-s, --serial: Device serial number</string>
                    </property>
                    <property name="placeholderText">
-                    <string>例如: ABCD1234567890</string>
+                    <string>e.g., ABCD1234567890</string>
                    </property>
                   </widget>
                  </item>
@@ -319,7 +319,7 @@
                   <string>QPushButton { background-color: #2196F3; color: white; padding: 6px; }</string>
                  </property>
                  <property name="text">
-                  <string>通过序列号连接</string>
+                  <string>Connect by Serial</string>
                  </property>
                 </widget>
                </item>
@@ -348,7 +348,7 @@
                 <string>QPushButton { background-color: #f44336; color: white; padding: 6px; }</string>
                </property>
                <property name="text">
-                <string>断开所有</string>
+                <string>Disconnect All</string>
                </property>
               </widget>
              </item>
@@ -358,7 +358,7 @@
                 <string>adb kill-server &amp;&amp; adb start-server</string>
                </property>
                <property name="text">
-                <string>重启 ADB</string>
+                <string>Restart ADB</string>
                </property>
               </widget>
              </item>
@@ -382,7 +382,7 @@
             </rect>
            </property>
            <attribute name="label">
-            <string>视频设置</string>
+            <string>Video Settings</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_videoPage">
             <property name="leftMargin">
@@ -409,23 +409,23 @@
                <item row="0" column="0">
                 <widget class="QLabel" name="label_videoSource">
                  <property name="text">
-                  <string>视频源:</string>
+                  <string>Video Source:</string>
                  </property>
                 </widget>
                </item>
                <item row="0" column="1">
                 <widget class="QComboBox" name="comboBox_videoSource">
                  <property name="toolTip">
-                  <string>--video-source: 选择视频源</string>
+                  <string>--video-source: Select video source</string>
                  </property>
                  <item>
                   <property name="text">
-                   <string>屏幕显示 (display)</string>
+                   <string>Screen Display (display)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>摄像头 (camera) - Android 12+</string>
+                   <string>Camera (camera) - Android 12+</string>
                   </property>
                  </item>
                 </widget>
@@ -433,7 +433,7 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="label_maxSize">
                  <property name="text">
-                  <string>最大分辨率:</string>
+                  <string>Max Size:</string>
                  </property>
                 </widget>
                </item>
@@ -442,7 +442,7 @@
                  <item>
                   <widget class="QSpinBox" name="spinBox_maxSize">
                    <property name="toolTip">
-                    <string>-m, --max-size: 限制宽度和高度 (0=不限制)</string>
+                    <string>-m, --max-size: Limit width and height (0=unlimited)</string>
                    </property>
                    <property name="suffix">
                     <string> px</string>
@@ -464,7 +464,7 @@
                  <item>
                   <widget class="QLabel" name="label_maxSizeNote">
                    <property name="text">
-                    <string>(0=原始)</string>
+                    <string>(0=original)</string>
                    </property>
                   </widget>
                  </item>
@@ -473,7 +473,7 @@
                <item row="2" column="0">
                 <widget class="QLabel" name="label_videoBitrate">
                  <property name="text">
-                  <string>视频码率:</string>
+                  <string>Video Bitrate:</string>
                  </property>
                 </widget>
                </item>
@@ -482,7 +482,7 @@
                  <item>
                   <widget class="QSpinBox" name="spinBox_videoBitrate">
                    <property name="toolTip">
-                    <string>-b, --video-bit-rate: 视频编码码率</string>
+                    <string>-b, --video-bit-rate: Video encoding bitrate</string>
                    </property>
                    <property name="suffix">
                     <string> Mbps</string>
@@ -503,14 +503,14 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="label_maxFPS">
                  <property name="text">
-                  <string>最大帧率:</string>
+                  <string>Max FPS:</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="1">
                 <widget class="QSpinBox" name="spinBox_maxFPS">
                  <property name="toolTip">
-                  <string>--max-fps: 限制帧率 (0=不限制, Android 10+)</string>
+                  <string>--max-fps: Limit frame rate (0=unlimited, Android 10+)</string>
                  </property>
                  <property name="suffix">
                   <string> fps</string>
@@ -529,14 +529,14 @@
                <item row="4" column="0">
                 <widget class="QLabel" name="label_videoCodec">
                  <property name="text">
-                  <string>视频编码:</string>
+                  <string>Video Codec:</string>
                  </property>
                 </widget>
                </item>
                <item row="4" column="1">
                 <widget class="QComboBox" name="comboBox_videoCodec">
                  <property name="toolTip">
-                  <string>--video-codec: 选择视频编码器</string>
+                  <string>--video-codec: Select video encoder</string>
                  </property>
                  <item>
                   <property name="text">
@@ -558,7 +558,7 @@
                <item row="5" column="0">
                 <widget class="QLabel" name="label_displayID">
                  <property name="text">
-                  <string>显示器 ID:</string>
+                  <string>Display ID:</string>
                  </property>
                 </widget>
                </item>
@@ -567,7 +567,7 @@
                  <item>
                   <widget class="QSpinBox" name="spinBox_displayID">
                    <property name="toolTip">
-                    <string>--display-id: 指定要镜像的显示器 ID</string>
+                    <string>--display-id: Specify the display ID to mirror</string>
                    </property>
                    <property name="minimum">
                     <number>0</number>
@@ -583,10 +583,10 @@
                  <item>
                   <widget class="QPushButton" name="btn_listDisplays">
                    <property name="toolTip">
-                    <string>--list-displays: 列出所有显示器</string>
+                    <string>--list-displays: List all displays</string>
                    </property>
                    <property name="text">
-                    <string>列表</string>
+                    <string>List</string>
                    </property>
                   </widget>
                  </item>
@@ -595,17 +595,17 @@
                <item row="6" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_noVideo">
                  <property name="toolTip">
-                  <string>仅转发音频和控制，不显示视频</string>
+                  <string>Forward audio and control only, do not display video</string>
                  </property>
                  <property name="text">
-                  <string>禁用视频转发 (--no-video)</string>
+                  <string>Disable video forwarding (--no-video)</string>
                  </property>
                 </widget>
                </item>
                <item row="7" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_noVideoPlayback">
                  <property name="text">
-                  <string>禁用视频播放 (--no-video-playback)</string>
+                  <string>Disable video playback (--no-video-playback)</string>
                  </property>
                 </widget>
                </item>
@@ -624,7 +624,7 @@
             </rect>
            </property>
            <attribute name="label">
-            <string>音频设置</string>
+            <string>Audio Settings</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_audioPage">
             <property name="leftMargin">
@@ -651,58 +651,58 @@
                <item row="0" column="0">
                 <widget class="QLabel" name="label_audioSource">
                  <property name="text">
-                  <string>音频源:</string>
+                  <string>Audio Source:</string>
                  </property>
                 </widget>
                </item>
                <item row="0" column="1">
                 <widget class="QComboBox" name="comboBox_audioSource">
                  <property name="toolTip">
-                  <string>--audio-source: 选择音频源</string>
+                  <string>--audio-source: Select audio source</string>
                  </property>
                  <item>
                   <property name="text">
-                   <string>输出 (output)</string>
+                   <string>Output (output)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>播放 (playback)</string>
+                   <string>Playback (playback)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>麦克风 (mic)</string>
+                   <string>Microphone (mic)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>麦克风-未处理 (mic-unprocessed)</string>
+                   <string>Microphone-unprocessed (mic-unprocessed)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>麦克风-摄像 (mic-camcorder)</string>
+                   <string>Microphone-camcorder (mic-camcorder)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>麦克风-语音识别 (mic-voice-recognition)</string>
+                   <string>Microphone-voice-recognition (mic-voice-recognition)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>麦克风-语音通话 (mic-voice-communication)</string>
+                   <string>Microphone-voice-communication (mic-voice-communication)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>语音通话 (voice-call)</string>
+                   <string>Voice Call (voice-call)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>语音表演 (voice-performance)</string>
+                   <string>Voice Performance (voice-performance)</string>
                   </property>
                  </item>
                 </widget>
@@ -710,14 +710,14 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="label_audioBitrate">
                  <property name="text">
-                  <string>音频码率:</string>
+                  <string>Audio Bitrate:</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
                 <widget class="QSpinBox" name="spinBox_audioBitrate">
                  <property name="toolTip">
-                  <string>--audio-bit-rate: 音频编码码率</string>
+                  <string>--audio-bit-rate: Audio encoding bitrate</string>
                  </property>
                  <property name="suffix">
                   <string> Kbps</string>
@@ -739,14 +739,14 @@
                <item row="2" column="0">
                 <widget class="QLabel" name="label_audioCodec">
                  <property name="text">
-                  <string>音频编码:</string>
+                  <string>Audio Codec:</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="1">
                 <widget class="QComboBox" name="comboBox_audioCodec">
                  <property name="toolTip">
-                  <string>--audio-codec: 选择音频编码器</string>
+                  <string>--audio-codec: Select audio encoder</string>
                  </property>
                  <item>
                   <property name="text">
@@ -773,14 +773,14 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="label_audioBuffer">
                  <property name="text">
-                  <string>音频缓冲:</string>
+                  <string>Audio Buffer:</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="1">
                 <widget class="QSpinBox" name="spinBox_audioBuffer">
                  <property name="toolTip">
-                  <string>--audio-buffer: 音频缓冲延迟 (降低延迟但可能导致音频卡顿)</string>
+                  <string>--audio-buffer: Audio buffering delay (reduces latency but may cause stutter)</string>
                  </property>
                  <property name="suffix">
                   <string> ms</string>
@@ -802,17 +802,17 @@
                <item row="4" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_audioDup">
                  <property name="toolTip">
-                  <string>捕获音频但保持设备播放 (仅用于 playback 源)</string>
+                  <string>Capture audio but keep it playing on the device (for playback source only)</string>
                  </property>
                  <property name="text">
-                  <string>音频双路输出 (--audio-dup)</string>
+                  <string>Audio Passthrough (--audio-dup)</string>
                  </property>
                 </widget>
                </item>
                <item row="5" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_noAudio">
                  <property name="text">
-                  <string>禁用音频转发 (--no-audio)</string>
+                  <string>Disable audio forwarding (--no-audio)</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -822,10 +822,10 @@
                <item row="6" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_requireAudio">
                  <property name="toolTip">
-                  <string>如果音频捕获失败，则停止镜像</string>
+                  <string>Stop mirroring if audio capture fails</string>
                  </property>
                  <property name="text">
-                  <string>音频失败时中止 (--require-audio)</string>
+                  <string>Abort on audio error (--require-audio)</string>
                  </property>
                 </widget>
                </item>
@@ -844,7 +844,7 @@
             </rect>
            </property>
            <attribute name="label">
-            <string>摄像头设置 (Camera)</string>
+            <string>Camera Settings</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_cameraPage">
             <property name="leftMargin">
@@ -874,7 +874,7 @@
                <item row="0" column="0">
                 <widget class="QLabel" name="label_cameraID">
                  <property name="text">
-                  <string>摄像头 ID:</string>
+                  <string>Camera ID:</string>
                  </property>
                 </widget>
                </item>
@@ -883,7 +883,7 @@
                  <item>
                   <widget class="QComboBox" name="comboBox_cameraID">
                    <property name="toolTip">
-                    <string>--camera-id: 选择要镜像的摄像头</string>
+                    <string>--camera-id: Select the camera to mirror</string>
                    </property>
                    <property name="editable">
                     <bool>true</bool>
@@ -893,10 +893,10 @@
                  <item>
                   <widget class="QPushButton" name="btn_listCameras">
                    <property name="toolTip">
-                    <string>--list-cameras: 列出所有摄像头</string>
+                    <string>--list-cameras: List all cameras</string>
                    </property>
                    <property name="text">
-                    <string>列表</string>
+                    <string>List</string>
                    </property>
                   </widget>
                  </item>
@@ -905,33 +905,33 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="label_cameraFacing">
                  <property name="text">
-                  <string>摄像头方向:</string>
+                  <string>Camera Facing:</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
                 <widget class="QComboBox" name="comboBox_cameraFacing">
                  <property name="toolTip">
-                  <string>--camera-facing: 按方向选择摄像头</string>
+                  <string>--camera-facing: Select camera by facing</string>
                  </property>
                  <item>
                   <property name="text">
-                   <string>不指定</string>
+                   <string>Any</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>前置 (front)</string>
+                   <string>Front (front)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>后置 (back)</string>
+                   <string>Back (back)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>外接 (external)</string>
+                   <string>External (external)</string>
                   </property>
                  </item>
                 </widget>
@@ -939,7 +939,7 @@
                <item row="2" column="0">
                 <widget class="QLabel" name="label_cameraSize">
                  <property name="text">
-                  <string>摄像头分辨率:</string>
+                  <string>Camera Size:</string>
                  </property>
                 </widget>
                </item>
@@ -948,14 +948,14 @@
                  <item>
                   <widget class="QComboBox" name="comboBox_cameraSize">
                    <property name="toolTip">
-                    <string>--camera-size: 指定摄像头分辨率</string>
+                    <string>--camera-size: Specify camera resolution</string>
                    </property>
                    <property name="editable">
                     <bool>true</bool>
                    </property>
                    <item>
                     <property name="text">
-                     <string>自动</string>
+                     <string>Auto</string>
                     </property>
                    </item>
                   </widget>
@@ -963,10 +963,10 @@
                  <item>
                   <widget class="QPushButton" name="btn_listCameraSizes">
                    <property name="toolTip">
-                    <string>--list-camera-sizes: 列出所有支持的分辨率</string>
+                    <string>--list-camera-sizes: List all supported resolutions</string>
                    </property>
                    <property name="text">
-                    <string>列表</string>
+                    <string>List</string>
                    </property>
                   </widget>
                  </item>
@@ -975,14 +975,14 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="label_cameraFPS">
                  <property name="text">
-                  <string>摄像头帧率:</string>
+                  <string>Camera FPS:</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="1">
                 <widget class="QSpinBox" name="spinBox_cameraFPS">
                  <property name="toolTip">
-                  <string>--camera-fps: 指定摄像头捕获帧率 (0=默认)</string>
+                  <string>--camera-fps: Specify camera capture frame rate (0=default)</string>
                  </property>
                  <property name="suffix">
                   <string> fps</string>
@@ -1001,10 +1001,10 @@
                <item row="4" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_cameraHighSpeed">
                  <property name="toolTip">
-                  <string>仅适用于特定分辨率和帧率</string>
+                  <string>Only for specific resolutions and frame rates</string>
                  </property>
                  <property name="text">
-                  <string>启用高速摄像头模式 (--camera-high-speed)</string>
+                  <string>Enable high-speed camera mode (--camera-high-speed)</string>
                  </property>
                 </widget>
                </item>
@@ -1023,7 +1023,7 @@
             </rect>
            </property>
            <attribute name="label">
-            <string>控制与行为</string>
+            <string>Control &amp; Behavior</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_behaviorPage">
             <property name="leftMargin">
@@ -1050,50 +1050,50 @@
                <item row="0" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_noControl">
                  <property name="toolTip">
-                  <string>镜像设备但禁用键盘和鼠标控制</string>
+                  <string>Mirror the device but disable keyboard and mouse control</string>
                  </property>
                  <property name="text">
-                  <string>禁用控制/只读模式 (--no-control)</string>
+                  <string>Disable control / Read-only mode (--no-control)</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_stayAwake">
                  <property name="toolTip">
-                  <string>--stay-awake: 运行时保持设备亮屏</string>
+                  <string>--stay-awake: Keep the device screen on while running</string>
                  </property>
                  <property name="text">
-                  <string>保持设备唤醒 (-w)</string>
+                  <string>Stay awake (-w)</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_turnScreenOff">
                  <property name="toolTip">
-                  <string>--turn-screen-off: 立即关闭设备屏幕</string>
+                  <string>--turn-screen-off: Turn the device screen off immediately</string>
                  </property>
                  <property name="text">
-                  <string>启动时关闭设备屏幕 (-S)</string>
+                  <string>Turn screen off on start (-S)</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_powerOffOnClose">
                  <property name="toolTip">
-                  <string>--power-off-on-close: 退出时关闭设备屏幕</string>
+                  <string>--power-off-on-close: Power off screen on close</string>
                  </property>
                  <property name="text">
-                  <string>关闭时关闭设备屏幕</string>
+                  <string>Turn screen off on close</string>
                  </property>
                 </widget>
                </item>
                <item row="4" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_showTouches">
                  <property name="toolTip">
-                  <string>--show-touches: 在设备上显示物理触摸位置</string>
+                  <string>--show-touches: Show physical touch locations on the device</string>
                  </property>
                  <property name="text">
-                  <string>显示物理触摸点 (-t)</string>
+                  <string>Show touches (-t)</string>
                  </property>
                 </widget>
                </item>
@@ -1103,21 +1103,21 @@
                   <string>--no-clipboard-autosync</string>
                  </property>
                  <property name="text">
-                  <string>禁用剪贴板自动同步</string>
+                  <string>Disable clipboard autosync</string>
                  </property>
                 </widget>
                </item>
                <item row="6" column="0">
                 <widget class="QLabel" name="label_keyboardMode">
                  <property name="text">
-                  <string>键盘模式:</string>
+                  <string>Keyboard Mode:</string>
                  </property>
                 </widget>
                </item>
                <item row="6" column="1">
                 <widget class="QComboBox" name="comboBox_keyboardMode">
                  <property name="toolTip">
-                  <string>--keyboard: 选择键盘输入模式</string>
+                  <string>--keyboard: Select keyboard input mode</string>
                  </property>
                  <item>
                   <property name="text">
@@ -1136,7 +1136,7 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>禁用 (disabled)</string>
+                   <string>Disabled (disabled)</string>
                   </property>
                  </item>
                 </widget>
@@ -1144,14 +1144,14 @@
                <item row="7" column="0">
                 <widget class="QLabel" name="label_mouseMode">
                  <property name="text">
-                  <string>鼠标模式:</string>
+                  <string>Mouse Mode:</string>
                  </property>
                 </widget>
                </item>
                <item row="7" column="1">
                 <widget class="QComboBox" name="comboBox_mouseMode">
                  <property name="toolTip">
-                  <string>--mouse: 选择鼠标输入模式</string>
+                  <string>--mouse: Select mouse input mode</string>
                  </property>
                  <item>
                   <property name="text">
@@ -1170,7 +1170,7 @@
                  </item>
                  <item>
                   <property name="text">
-                   <string>禁用 (disabled)</string>
+                   <string>Disabled (disabled)</string>
                   </property>
                  </item>
                 </widget>
@@ -1178,10 +1178,10 @@
                <item row="8" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_otg">
                  <property name="toolTip">
-                  <string>模拟物理键鼠，无需 USB 调试，但无法镜像</string>
+                  <string>Simulate physical keyboard/mouse, no USB debugging needed, but cannot mirror</string>
                  </property>
                  <property name="text">
-                  <string>OTG 模式 (--otg)</string>
+                  <string>OTG Mode (--otg)</string>
                  </property>
                 </widget>
                </item>
@@ -1200,7 +1200,7 @@
             </rect>
            </property>
            <attribute name="label">
-            <string>窗口与录制</string>
+            <string>Window &amp; Recording</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_windowPage">
             <property name="leftMargin">
@@ -1227,42 +1227,42 @@
                <item row="0" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_fullscreen">
                  <property name="text">
-                  <string>全屏启动 (-f, --fullscreen)</string>
+                  <string>Start in fullscreen (-f, --fullscreen)</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_alwaysOnTop">
                  <property name="text">
-                  <string>窗口置顶 (--always-on-top)</string>
+                  <string>Always on top (--always-on-top)</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_windowBorderless">
                  <property name="text">
-                  <string>无边框窗口 (--window-borderless)</string>
+                  <string>Borderless window (--window-borderless)</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="label_windowTitle">
                  <property name="text">
-                  <string>窗口标题:</string>
+                  <string>Window Title:</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="1">
                 <widget class="QLineEdit" name="lineEdit_windowTitle">
                  <property name="toolTip">
-                  <string>--window-title: 自定义窗口标题</string>
+                  <string>--window-title: Custom window title</string>
                  </property>
                 </widget>
                </item>
                <item row="4" column="0">
                 <widget class="QLabel" name="label_recordFile">
                  <property name="text">
-                  <string>录制文件:</string>
+                  <string>Record File:</string>
                  </property>
                 </widget>
                </item>
@@ -1271,17 +1271,17 @@
                  <item>
                   <widget class="QLineEdit" name="lineEdit_recordFile">
                    <property name="toolTip">
-                    <string>-r, --record: 录制屏幕到文件</string>
+                    <string>-r, --record: Record screen to file</string>
                    </property>
                    <property name="placeholderText">
-                    <string>例如 D:/videos/record.mp4</string>
+                    <string>e.g., D:/videos/record.mp4</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="btn_saveRecordAs">
                    <property name="text">
-                    <string>另存为...</string>
+                    <string>Save As...</string>
                    </property>
                   </widget>
                  </item>
@@ -1290,18 +1290,18 @@
                <item row="5" column="0">
                 <widget class="QLabel" name="label_recordFormat">
                  <property name="text">
-                  <string>录制格式:</string>
+                  <string>Record Format:</string>
                  </property>
                 </widget>
                </item>
                <item row="5" column="1">
                 <widget class="QComboBox" name="comboBox_recordFormat">
                  <property name="toolTip">
-                  <string>--record-format: 指定录制格式 (或由文件扩展名决定)</string>
+                  <string>--record-format: Specify recording format (or determined by file extension)</string>
                  </property>
                  <item>
                   <property name="text">
-                   <string>自动</string>
+                   <string>Auto</string>
                   </property>
                  </item>
                  <item>
@@ -1349,10 +1349,10 @@
                <item row="6" column="0" colspan="2">
                 <widget class="QCheckBox" name="checkBox_noPlayback">
                  <property name="toolTip">
-                  <string>--no-playback: 禁用计算机上的音视频播放 (录制时有用)</string>
+                  <string>--no-playback: Disable audio/video playback on computer (useful for recording)</string>
                  </property>
                  <property name="text">
-                  <string>不播放音视频 (-N)</string>
+                  <string>No playback (-N)</string>
                  </property>
                 </widget>
                </item>
@@ -1402,7 +1402,7 @@
             <item>
              <widget class="QLabel" name="label_welcome">
               <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:600;&quot;&gt;Scrcpy 多设备控制器&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; color:#666666;&quot;&gt;请从左侧选择设备进行连接&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#888888;&quot;&gt;支持 USB 和 WiFi (TCP/IP) 连接&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:600;&quot;&gt;Scrcpy Multi-Device Manager&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; color:#666666;&quot;&gt;Please select a device from the left panel to connect&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#888888;&quot;&gt;Supports USB and WiFi (TCP/IP) connections&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1493,7 +1493,7 @@
            </property>
            <widget class="QWidget" name="tab_logs">
             <attribute name="title">
-             <string>运行日志</string>
+             <string>Logs</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_logs">
              <item>
@@ -1501,7 +1501,7 @@
                <item>
                 <widget class="QComboBox" name="comboBox_logLevel">
                  <property name="toolTip">
-                  <string>--verbosity: 设置日志级别</string>
+                  <string>--verbosity: Set log level</string>
                  </property>
                  <item>
                   <property name="text">
@@ -1533,7 +1533,7 @@
                <item>
                 <widget class="QCheckBox" name="checkBox_autoScroll">
                  <property name="text">
-                  <string>自动滚动</string>
+                  <string>Auto-scroll</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
@@ -1543,7 +1543,7 @@
                <item>
                 <widget class="QCheckBox" name="checkBox_printFPS">
                  <property name="text">
-                  <string>打印FPS (--print-fps)</string>
+                  <string>Print FPS (--print-fps)</string>
                  </property>
                 </widget>
                </item>
@@ -1563,7 +1563,7 @@
                <item>
                 <widget class="QPushButton" name="btn_clearLogs">
                  <property name="text">
-                  <string>清空</string>
+                  <string>Clear</string>
                  </property>
                  <property name="icon">
                   <iconset theme="edit-clear"/>
@@ -1573,7 +1573,7 @@
                <item>
                 <widget class="QPushButton" name="btn_saveLogs">
                  <property name="text">
-                  <string>保存</string>
+                  <string>Save</string>
                  </property>
                  <property name="icon">
                   <iconset theme="document-save"/>
@@ -1599,7 +1599,7 @@
            </widget>
            <widget class="QWidget" name="tab_status">
             <attribute name="title">
-             <string>已连接设备状态</string>
+             <string>Connected Devices Status</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_status">
              <item>
@@ -1612,27 +1612,27 @@
                </property>
                <column>
                 <property name="text">
-                 <string>名称/序列号</string>
+                 <string>Name/Serial</string>
                 </property>
                </column>
                <column>
                 <property name="text">
-                 <string>连接方式</string>
+                 <string>Connection Type</string>
                 </property>
                </column>
                <column>
                 <property name="text">
-                 <string>状态</string>
+                 <string>Status</string>
                 </property>
                </column>
                <column>
                 <property name="text">
-                 <string>分辨率</string>
+                 <string>Resolution</string>
                 </property>
                </column>
                <column>
                 <property name="text">
-                 <string>码率 (V/A)</string>
+                 <string>Bitrate (V/A)</string>
                 </property>
                </column>
               </widget>
@@ -1659,7 +1659,7 @@
    </property>
    <widget class="QMenu" name="menu_file">
     <property name="title">
-     <string>文件(&amp;F)</string>
+     <string>File(&amp;F)</string>
     </property>
     <addaction name="action_saveProfile"/>
     <addaction name="action_loadProfile"/>
@@ -1670,7 +1670,7 @@
    </widget>
    <widget class="QMenu" name="menu_device">
     <property name="title">
-     <string>设备(&amp;D)</string>
+     <string>Device(&amp;D)</string>
     </property>
     <addaction name="action_refreshUSB"/>
     <addaction name="separator"/>
@@ -1679,7 +1679,7 @@
    </widget>
    <widget class="QMenu" name="menu_view">
     <property name="title">
-     <string>视图(&amp;V)</string>
+     <string>View(&amp;V)</string>
     </property>
     <addaction name="action_toggleLeftPanel"/>
     <addaction name="action_toggleBottomPanel"/>
@@ -1689,7 +1689,7 @@
    </widget>
    <widget class="QMenu" name="menu_help">
     <property name="title">
-     <string>帮助(&amp;H)</string>
+     <string>Help(&amp;H)</string>
     </property>
     <addaction name="action_about"/>
     <addaction name="action_shortcuts"/>
@@ -1711,13 +1711,13 @@
      </rect>
     </property>
     <property name="text">
-     <string>已连接设备: 0</string>
+     <string>Connected Devices: 0</string>
     </property>
    </widget>
   </widget>
   <action name="action_saveProfile">
    <property name="text">
-    <string>保存配置...</string>
+    <string>Save Profile...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -1725,7 +1725,7 @@
   </action>
   <action name="action_loadProfile">
    <property name="text">
-    <string>加载配置...</string>
+    <string>Load Profile...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -1733,7 +1733,7 @@
   </action>
   <action name="action_settings">
    <property name="text">
-    <string>应用程序设置...</string>
+    <string>Application Settings...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+,</string>
@@ -1741,7 +1741,7 @@
   </action>
   <action name="action_exit">
    <property name="text">
-    <string>退出</string>
+    <string>Exit</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
@@ -1749,7 +1749,7 @@
   </action>
   <action name="action_refreshUSB">
    <property name="text">
-    <string>刷新 USB 设备列表</string>
+    <string>Refresh USB Device List</string>
    </property>
    <property name="shortcut">
     <string>F5</string>
@@ -1757,12 +1757,12 @@
   </action>
   <action name="action_connectAllUSB">
    <property name="text">
-    <string>连接所有 USB 设备</string>
+    <string>Connect All USB Devices</string>
    </property>
   </action>
   <action name="action_disconnectAll">
    <property name="text">
-    <string>断开所有设备</string>
+    <string>Disconnect All Devices</string>
    </property>
   </action>
   <action name="action_toggleLeftPanel">
@@ -1773,7 +1773,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>显示/隐藏设置面板</string>
+    <string>Show/Hide Settings Panel</string>
    </property>
   </action>
   <action name="action_toggleBottomPanel">
@@ -1784,7 +1784,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>显示/隐藏日志面板</string>
+    <string>Show/Hide Log Panel</string>
    </property>
   </action>
   <action name="action_appAlwaysOnTop">
@@ -1792,7 +1792,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>主窗口置顶</string>
+    <string>Main Window Always on Top</string>
    </property>
   </action>
   <action name="action_gridLayout">
@@ -1800,22 +1800,22 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>网格布局</string>
+    <string>Grid Layout</string>
    </property>
   </action>
   <action name="action_about">
    <property name="text">
-    <string>关于</string>
+    <string>About</string>
    </property>
   </action>
   <action name="action_shortcuts">
    <property name="text">
-    <string>Scrcpy 快捷键</string>
+    <string>Scrcpy Shortcuts</string>
    </property>
   </action>
   <action name="action_checkUpdates">
    <property name="text">
-    <string>检查更新</string>
+    <string>Check for Updates</string>
    </property>
   </action>
   <action name="action_home">
@@ -1831,7 +1831,7 @@
     <iconset theme="go-previous"/>
    </property>
    <property name="text">
-    <string>返回</string>
+    <string>Back</string>
    </property>
   </action>
   <action name="action_appSwitch">
@@ -1839,7 +1839,7 @@
     <iconset theme="view-app-grid"/>
    </property>
    <property name="text">
-    <string>多任务</string>
+    <string>App Switch</string>
    </property>
   </action>
   <action name="action_menu">
@@ -1847,7 +1847,7 @@
     <iconset theme="application-menu"/>
    </property>
    <property name="text">
-    <string>菜单</string>
+    <string>Menu</string>
    </property>
   </action>
   <action name="action_volumeUp">
@@ -1855,7 +1855,7 @@
     <iconset theme="audio-volume-high"/>
    </property>
    <property name="text">
-    <string>音量+</string>
+    <string>Volume Up</string>
    </property>
   </action>
   <action name="action_volumeDown">
@@ -1863,7 +1863,7 @@
     <iconset theme="audio-volume-low"/>
    </property>
    <property name="text">
-    <string>音量-</string>
+    <string>Volume Down</string>
    </property>
   </action>
   <action name="action_power">
@@ -1871,17 +1871,17 @@
     <iconset theme="system-shutdown"/>
    </property>
    <property name="text">
-    <string>电源</string>
+    <string>Power</string>
    </property>
   </action>
   <action name="action_screenOn">
    <property name="text">
-    <string>亮屏</string>
+    <string>Screen On</string>
    </property>
   </action>
   <action name="action_screenOff">
    <property name="text">
-    <string>息屏(镜像)</string>
+    <string>Screen Off (Mirror)</string>
    </property>
   </action>
   <action name="action_rotateDevice">
@@ -1889,7 +1889,7 @@
     <iconset theme="object-rotate-right"/>
    </property>
    <property name="text">
-    <string>旋转</string>
+    <string>Rotate</string>
    </property>
   </action>
   <action name="action_expandNotifications">
@@ -1897,7 +1897,7 @@
     <iconset theme="mail-mark-unread"/>
    </property>
    <property name="text">
-    <string>通知栏</string>
+    <string>Expand Notifications</string>
    </property>
   </action>
   <action name="action_collapseNotifications">
@@ -1905,7 +1905,7 @@
     <iconset theme="mail-read"/>
    </property>
    <property name="text">
-    <string>收起通知</string>
+    <string>Collapse Notifications</string>
    </property>
   </action>
   <action name="action_screenshot">
@@ -1913,7 +1913,7 @@
     <iconset theme="camera-photo"/>
    </property>
    <property name="text">
-    <string>截图</string>
+    <string>Screenshot</string>
    </property>
   </action>
  </widget>

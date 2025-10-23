@@ -80,7 +80,6 @@ private slots:
     void on_action_power_triggered();
     void on_action_volumeUp_triggered();
     void on_action_volumeDown_triggered();
-    void on_action_rotateDevice_triggered();
     void on_action_home_triggered();
     void on_action_back_triggered();
     void on_action_appSwitch_triggered();

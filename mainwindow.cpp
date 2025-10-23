@@ -200,10 +200,9 @@ void MainWindow::handleAboutAction()
 {
     QMessageBox::about(this, "About Scrcpy Multi-Device Controller",
                        "<h3>Scrcpy Multi-Device Controller</h3>"
-                       "<p>Version: 1.0 (Based on Scrcpy 3.x)</p>"
+                       "<p>Version: 1.0 (Based on Scrcpy 3.3.3)</p>"
                        "<p>This is a graphical user interface tool built with Qt and Scrcpy, designed to "
-                       "easily manage and control multiple Android devices.</p>"
-                       "<p>Developed with AI assistance.</p>");
+                       "easily manage and control multiple Android devices.</p>");
 }
 
 void MainWindow::handleShortcutsAction()
