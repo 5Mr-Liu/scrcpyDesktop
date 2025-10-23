@@ -8,7 +8,7 @@
 **English | [中文](./README.zh-CN.md)**
 
 <p align="center">
-  <img alt="Application Screenshot" src="./assets/ApplicationDesktop.png" width="850"/>
+  <img alt="Application Screenshot" src="./assert/ApplicationDesktop.png" width="850"/>
 </p>
 
 **Scrcpy Desktop** is a powerful desktop GUI client built on top of [scrcpy](https://github.com/Genymobile/scrcpy). Developed using C++ and the Qt framework, it aims to provide an intuitive and efficient way to manage and control multiple Android devices simultaneously.
